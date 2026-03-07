@@ -76,6 +76,15 @@ export const routes: Routes = [
     }
   },
   {
+    path: 'queue-monitor',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/queue-monitor/queue-monitor.component').then(c => c.QueueMonitorComponent),
+    data: {
+      title: 'Queue Monitor',
+      breadcrumb: 'Queue'
+    }
+  },
+  {
     path: '**',
     loadComponent: () => import('./features/not-found/not-found.component').then(c => c.NotFoundComponent),
     data: { title: 'Page Not Found' }

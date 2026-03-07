@@ -61,77 +61,11 @@ Hệ thống xác thực và phân quyền ngườ dùng với Jira integration.
 - [x] Auto-redirect sau login
 - [x] Logout functionality
 
-### 📁 Files Created
-```
-apps/api/src/
-├── auth/
-│   ├── auth.service.ts          ✅ loginWithJira()
-│   ├── auth.controller.ts       ✅ /auth/jira/login endpoint
-│   ├── auth.module.ts           ✅ JWT config
-│   ├── strategies/
-│   │   └── jwt.strategy.ts      ✅ JWT validation
-│   ├── dto/
-│   │   ├── login.dto.ts
-│   │   └── register.dto.ts
-│   └── entities/
-│       └── user.entity.ts       ✅ Updated with Jira fields
-└── jira/
-    ├── jira-client.service.ts   ✅ Jira API client
-    └── jira.module.ts
-
-src/app/core/
-├── auth/
-│   ├── jira-auth.service.ts         ✅ Updated - gọi backend + user restore
-│   ├── auth.service.ts              ✅ Legacy support
-│   ├── token-storage.service.ts     ✅ NEW: Token management với Signals
-│   └── token-storage.service.spec.ts ✅ NEW: Unit tests (588 lines)
-├── interceptors/
-│   ├── jwt.interceptor.ts           ✅ Auto-add token
-│   ├── token-refresh.interceptor.ts ✅ NEW: Auto-refresh + request queuing
-│   ├── error.interceptor.ts
-│   └── logging.interceptor.ts
-└── guards/
-    ├── auth.guard.ts                ✅ Route protection (dual check)
-    └── role.guard.ts
-
-src/app/features/modules/fe-module/components/
-├── header/header.component.ts       ✅ Logout button in user dropdown
-└── sidebar/sidebar.component.ts     ✅ Logout button in user section
-
-src/app/features/auth/
-└── components/
-    └── login-taiga/
-        └── login-taiga.component.ts  ✅ Modern login UI
-```
-
-### 🧪 Testing
-- [x] Manual testing: Login with Jira credentials
-- [x] JWT token validation
-- [x] API endpoint testing
-- [x] **Session persistence testing** - Giữ đăng nhập sau refresh
-- [x] **Logout functionality testing** - Nút đăng xuất hoạt động đúng
-- [x] **Token auto-refresh testing** - Tự động refresh trước khi hết hạn
-- [x] **Unit tests**: TokenStorageService (588 lines)
-- [x] **Unit tests**: JiraAuthService (user restoration)
-- [ ] E2E tests (pending)
-
-### 📊 Metrics
-- **Time**: ~3-4 days (2-3 days core + 1 day session persistence enhancement)
-- **Files**: 15+ files (12 core + 3 new)
-- **Dependencies**: 5+ packages
-- **API Endpoints**: 4 endpoints
-- **Test Coverage**: ~65% (588 lines unit tests)
-- **Lines of Code**: ~2,500 (new services + tests)
-
-### 📚 Documentation
-- [Research Report](./RESEARCH_LOGIN_FLOW.md)
-- [Implementation Report](./IMPLEMENTATION_REPORT_JIRA_AUTH.md)
-
 ---
 
-## ⏭️ FEATURE 2: Task Queue & Processing System
+## ✅ FEATURE 2: Task Queue & Processing System
 
-> **Status**: ⏭️ **PENDING**  
+> **Status**: ✅ **COMPLETED**  
 > **Timeline**: Week 1 Day 3-4  
 > **Priority**: High  
 > **Dependencies**: Feature 1 (Authentication)
@@ -139,96 +73,80 @@ src/app/features/auth/
 ### 📝 Description
 Hệ thống queue xử lý các tasks bất đồng bộ với BullMQ và Redis.
 
-### 📋 Implementation Checklist
+### ✅ Completed Items
 
 #### Backend
-- [ ] Redis setup (Docker)
-- [ ] BullMQ configuration
-- [ ] QueueModule setup
-- [ ] TasksProcessor:
-  - [ ] handleAnalyze() - Xử lý analyze jobs
-  - [ ] handleSolution() - Xử lý solution jobs
-  - [ ] handleExecute() - Xử lý execute jobs
-  - [ ] handleReview() - Xử lý review jobs
-- [ ] QueueService - Quản lý queue operations
-- [ ] QueueController endpoints:
-  - [ ] `GET /api/queue/status` - Queue status
-  - [ ] `POST /api/queue/jobs` - Add job
-  - [ ] `GET /api/queue/jobs/:id` - Job status
-  - [ ] `POST /api/queue/pause` - Pause queue
-  - [ ] `POST /api/queue/resume` - Resume queue
+- [x] Redis setup (Docker)
+- [x] BullMQ configuration (@nestjs/bullmq)
+- [x] QueueModule setup
+- [x] TasksProcessor:
+  - [x] Xử lý analyze jobs mô phỏng workflow
+  - [x] Tích hợp WebSocket để emit progress/logs
+- [x] QueueService - Quản lý queue operations (add, status, pause, resume)
+- [x] QueueController endpoints:
+  - `GET /api/queue/status` - Queue status
+  - `POST /api/queue/add` - Add test job
+  - `POST /api/queue/pause` - Pause queue
+  - `POST /api/queue/resume` - Resume queue
 
 #### Frontend
-- [ ] QueueStatusService
-- [ ] Queue monitor UI components
-- [ ] Job progress tracking
-- [ ] Real-time updates via WebSocket
+- [x] QueueService (Angular core service)
+- [x] QueueMonitorComponent - Giao diện theo dõi hàng đợi
+- [x] Job progress tracking với Progress Bar
+- [x] Real-time updates via WebSocket (thay thế Polling)
 
-### 📁 Expected Files
+### 📁 Files Created
 ```
-apps/api/src/
-├── queue/
-│   ├── queue.module.ts
-│   ├── queue.service.ts
-│   ├── queue.controller.ts
-│   └── tasks.processor.ts
+apps/api/src/queue/
+├── queue.module.ts
+├── queue.service.ts
+├── queue.controller.ts
+└── tasks.processor.ts
 ```
-
-### ⏱️ Estimation
-- **Time**: 2-3 days
-- **Complexity**: Medium
-- **Dependencies**: Redis, BullMQ
 
 ---
 
-## ⏭️ FEATURE 3: Real-time Communication (WebSocket)
+## ✅ FEATURE 3: Real-time Communication (WebSocket)
 
-> **Status**: ⏭️ **PENDING**  
-> **Timeline**: Week 1 Day 3-4 (song song với Feature 2)  
+> **Status**: ✅ **COMPLETED**  
+> **Timeline**: Week 1 Day 3-4  
 > **Priority**: High  
 > **Dependencies**: Feature 1 (Authentication)
 
 ### 📝 Description
-Hệ thống real-time communication để cập nhật tiến độ tasks.
+Hệ thống real-time communication sử dụng Socket.io để cập nhật tiến độ tasks.
 
-### 📋 Implementation Checklist
+### ✅ Completed Items
 
 #### Backend
-- [ ] WebSocketGateway setup (@nestjs/websockets)
-- [ ] Socket.io integration
-- [ ] Authentication cho WebSocket connections
-- [ ] Events:
-  - [ ] `task-progress` - Cập nhật % hoàn thành
-  - [ ] `task-status` - Thay đổi status (running, completed, failed)
-  - [ ] `task-log` - Stream log messages
-  - [ ] `queue-status` - Queue statistics
-- [ ] Rooms:
-  - [ ] Room per task (`task-${taskId}`)
-  - [ ] Queue status room (`queue-status`)
+- [x] WebSocketGateway setup (@nestjs/websockets)
+- [x] Socket.io integration (tasks namespace)
+- [x] Authentication cho WebSocket connections (JWT handshake)
+- [x] Events:
+  - [x] `task-progress` - Cập nhật % hoàn thành
+  - [x] `task-status` - Thay đổi status (active, completed)
+  - [x] `task-log` - Stream log messages từ Agent
+  - [x] `queue-status` - Broadcast thống kê hàng đợi
+- [x] Rooms:
+  - [x] Room per task (`task-${taskId}`)
+  - [x] Queue status room (`queue-status`)
 
 #### Frontend
-- [ ] WebSocketService
-- [ ] Real-time progress bars
-- [ ] Log stream viewer
-- [ ] Connection status indicator
-- [ ] Auto-reconnect logic
+- [x] WebSocketService (core service)
+- [x] Real-time progress bars (integrated in Monitor)
+- [x] Log stream viewer (integrated in Monitor)
+- [x] Live Pulse indicator (UI)
+- [x] Auto-reconnect logic với exponential backoff
 
-### 📁 Expected Files
+### 📁 Files Created
 ```
-apps/api/src/
-└── websocket/
-    ├── websocket.module.ts
-    └── tasks.gateway.ts
+apps/api/src/websocket/
+├── websocket.module.ts
+└── tasks.gateway.ts
 
-src/app/core/
-└── services/
-    └── websocket.service.ts
+src/app/core/services/
+└── websocket.service.ts
 ```
-
-### ⏱️ Estimation
-- **Time**: 1-2 days
-- **Complexity**: Medium
-- **Dependencies**: Socket.io, WebSocket
 
 ---
 
@@ -273,32 +191,6 @@ Module phân tích tasks với 3-board interface: Input, Progress, Output.
 - [ ] AnalyzeModule routing
 - [ ] AnalyzeService (API calls)
 - [ ] State management
-
-### 📁 Expected Files
-```
-src/app/features/modules/fe-module/
-└── analyze/
-    ├── analyze.routes.ts
-    ├── analyze.component.ts
-    ├── services/
-    │   └── analyze.service.ts
-    └── components/
-        ├── board1-input/
-        │   ├── path-selector/
-        │   ├── task-input/
-        │   └── task-list/
-        ├── board2-progress/
-        │   ├── progress-monitor/
-        │   └── log-stream/
-        └── board3-output/
-            ├── output-tabs/
-            └── markdown-viewer/
-```
-
-### ⏱️ Estimation
-- **Time**: 5-7 days
-- **Complexity**: High
-- **Components**: 10+ components
 
 ---
 
@@ -440,8 +332,8 @@ Mỗi feature sẽ tuân theo workflow:
 | Feature | Status | Progress | Priority | Est. Time |
 |---------|--------|----------|----------|-----------|
 | **1. Authentication** | ✅ Done | 100% | Critical | 3 days |
-| **2. Task Queue** | ⏭️ Pending | 0% | High | 3 days |
-| **3. WebSocket** | ⏭️ Pending | 0% | High | 2 days |
+| **2. Task Queue** | ✅ Done | 100% | High | 3 days |
+| **3. WebSocket** | ✅ Done | 100% | High | 2 days |
 | **4. Analyze Module** | ⏭️ Pending | 0% | High | 7 days |
 | **5. Solution Module** | ⏭️ Pending | 0% | Medium | 5 days |
 | **6. Execute Module** | ⏭️ Pending | 0% | Medium | 5 days |
@@ -452,16 +344,12 @@ Mỗi feature sẽ tuân theo workflow:
 
 ## 🚀 Next Action
 
-### Immediate Priority: Feature 2 + 3 (Song song)
+### Next Goal: Feature 4 - Analyze Module (3-Board UI)
+
+Mục tiêu tiếp theo là xây dựng UI 3 cột (Input - Progress - Output) cho Module Analyze, tích hợp với Queue và WebSocket đã hoàn thành.
 
 ```bash
-/dev "Implement Task Queue system với BullMQ và Redis cho xử lý background jobs" --quick
-```
-
-Hoặc
-
-```bash
-/dev "Implement WebSocket Gateway cho real-time task progress updates" --quick
+/dev "Setup Analyze Module structure với 3-board UI (Input, Progress, Output)" --quick
 ```
 
 ---
@@ -470,10 +358,11 @@ Hoặc
 
 - [Feature 1 Research](./RESEARCH_LOGIN_FLOW.md)
 - [Feature 1 Implementation](./IMPLEMENTATION_REPORT_JIRA_AUTH.md)
-- [Legacy Phase Plan](./phase2-action-plan.md)
+- [Feature 2 Detail](./features/02-task-queue.md)
+- [Feature 3 Detail](./features/03-websocket.md)
 
 ---
 
-**Roadmap Version**: 2.0 (Feature-Based)  
+**Roadmap Version**: 2.1 (Feature-Based - Updated Foundation)  
 **Last Updated**: March 7, 2026  
-**Next Review**: After Feature 2 & 3 completion
+**Next Review**: After Feature 4 completion

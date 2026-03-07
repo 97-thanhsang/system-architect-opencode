@@ -1,48 +1,51 @@
-import { Processor, Process, OnQueueActive, OnQueueCompleted, OnQueueFailed } from '@nestjs/bull';
-import { Logger } from '@nestjs/common';
-import { Job } from 'bull';
+import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { Logger, Inject } from '@nestjs/common';
+import { Job } from 'bullmq';
 import { AnalyzeJobData } from './queue.service';
+import { TasksGateway } from '../websocket/tasks.gateway';
 
 @Processor('analyze')
-export class TasksProcessor {
+export class TasksProcessor extends WorkerHost {
   private readonly logger = new Logger(TasksProcessor.name);
 
-  @Process('analyze')
-  async handleAnalyze(job: Job<AnalyzeJobData>): Promise<any> {
-    this.logger.debug(`Processing analyze job ${job.id}...`);
-    
+  constructor(
+    private readonly tasksGateway: TasksGateway,
+  ) {
+    super();
+  }
+
+  async process(job: Job<AnalyzeJobData, any, string>): Promise<any> {
     const { taskId, jiraKey, input, type } = job.data;
+    this.logger.debug(`Processing analyze job ${job.id} for task ${taskId}...`);
+    
+    // Emit start status
+    this.tasksGateway.emitTaskStatus(taskId, 'active');
+    this.tasksGateway.emitTaskLog(taskId, `Starting analysis for task: ${jiraKey}`);
     
     // Simulate progress updates
     for (let progress = 0; progress <= 100; progress += 20) {
-      await job.progress(progress);
+      await job.updateProgress(progress);
       this.logger.debug(`Job ${job.id} progress: ${progress}%`);
       
+      // Emit real-time progress via WebSocket
+      this.tasksGateway.emitTaskProgress(taskId, progress);
+      this.tasksGateway.emitTaskLog(taskId, `Analysis step ${progress/20}: Processing ${input}...`);
+      
       // Simulate work
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 1500));
     }
 
     this.logger.debug(`Analyze job ${job.id} completed`);
     
+    // Emit completion status
+    const output = `Analysis completed for: ${input}`;
+    this.tasksGateway.emitTaskStatus(taskId, 'completed', output);
+    this.tasksGateway.emitTaskLog(taskId, `Analysis finished successfully.`);
+    
     return {
       taskId,
       status: 'completed',
-      output: `Analysis completed for: ${input}`,
+      output,
     };
-  }
-
-  @OnQueueActive()
-  onActive(job: Job) {
-    this.logger.debug(`Job ${job.id} has started`);
-  }
-
-  @OnQueueCompleted()
-  onCompleted(job: Job, result: any) {
-    this.logger.debug(`Job ${job.id} has completed with result:`, result);
-  }
-
-  @OnQueueFailed()
-  onFailed(job: Job, err: Error) {
-    this.logger.error(`Job ${job.id} has failed with error:`, err.message);
   }
 }

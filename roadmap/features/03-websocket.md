@@ -1,6 +1,6 @@
 # 🎯 Feature 03: Real-time Communication (WebSocket)
 
-> **Status**: ⏭️ PENDING  
+> **Status**: ✅ COMPLETED  
 > **Priority**: High  
 > **Dependencies**: Feature 1 (Authentication)  
 > **Est. Time**: 2 days
@@ -9,21 +9,21 @@
 
 ## 📋 Overview
 
-Hệ thống real-time communication để cập nhật tiến độ tasks.
+Hệ thống real-time communication sử dụng Socket.io để cập nhật tiến độ tasks từ Backend Worker về Frontend.
 
 ## 🎯 Goals
 
-- [ ] WebSocketGateway setup
-- [ ] Socket.io integration
-- [ ] WebSocket authentication
-- [ ] Real-time events:
-  - [ ] `task-progress` - Progress percentage
-  - [ ] `task-status` - Status changes
-  - [ ] `task-log` - Log messages
-  - [ ] `queue-status` - Queue statistics
-- [ ] Frontend WebSocketService
-- [ ] Real-time progress bars
-- [ ] Log stream viewer
+- [x] WebSocketGateway setup (@nestjs/websockets)
+- [x] Socket.io integration (tasks namespace)
+- [x] WebSocket authentication (JWT Handshake)
+- [x] Real-time events:
+  - [x] `task-progress` - Progress percentage
+  - [x] `task-status` - Status changes (active, completed)
+  - [x] `task-log` - Log messages stream
+  - [x] `queue-status` - Queue statistics broadcast
+- [x] Frontend WebSocketService (Signal-based state)
+- [x] Real-time progress bars (Integrated in Monitor)
+- [x] Log stream viewer (Integrated in Monitor)
 
 ## 📁 Expected Files
 
@@ -38,10 +38,12 @@ src/app/core/services/
 
 ## 📝 Notes
 
-- Rooms per task for targeted updates
-- Auto-reconnect logic
-- Connection status indicator
+- Rooms per task (`task-${taskId}`) cho phép update tập trung
+- Auto-reconnect logic với exponential backoff
+- Connection status indicator (Live Pulse UI)
+- Tích hợp sâu với TasksProcessor của Queue system
 
 ---
 
 **Created**: March 7, 2026
+**Updated**: March 7, 2026 (Marked as Completed)
