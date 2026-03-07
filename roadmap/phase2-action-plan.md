@@ -368,13 +368,43 @@ cd apps/api && npm test -- --coverage
 
 ## ✅ CHECKLIST TUẦN 1-4
 
-### Week 1 ✅
-- [ ] NestJS project created
-- [ ] 6 modules generated
-- [ ] Database entities defined
-- [ ] Redis running
-- [ ] Queue processor skeleton
-- [ ] WebSocket gateway skeleton
+### Week 1 (Đang thực hiện)
+
+#### Day 1 ✅ COMPLETED (March 2026)
+- [x] Prerequisites checked (Node.js v22, npm v10)
+- [x] NestJS CLI installed globally (@nestjs/cli@10)
+- [x] NestJS project created in apps/api/ (strict mode)
+- [x] Dependencies installed (201 packages)
+  - @nestjs/websockets, @nestjs/platform-socket.io
+  - @nestjs/bull, bull, ioredis
+  - @nestjs/passport, passport, passport-jwt
+  - @nestjs/typeorm, typeorm, sqlite3
+  - @nestjs/config, @nestjs/axios, axios
+  - class-validator, class-transformer
+- [x] 6 modules generated (auth, tasks, queue, opencode, jira, websocket)
+- [x] Docker Compose file created (Redis + PostgreSQL)
+- [x] DatabaseModule created with TypeORM config
+- [x] 3 Entities created:
+  - Task (id, jiraKey, status, type, input, output, metadata, timestamps)
+  - User (id, email, name, roles, jiraToken, timestamps)
+  - Pipeline (id, name, status, currentStep, steps, checkpoint, timestamps)
+- [x] TasksModule updated with entities
+- [x] AuthModule updated with User entity
+- [x] AppModule updated to import DatabaseModule
+- [x] Main.ts updated with CORS, ValidationPipe, global prefix
+- [x] start-redis.bat script created for Windows
+
+#### Day 2 ⏭️ NEXT
+- [ ] Generate services and controllers
+- [ ] Create DTOs with validation
+- [ ] Setup Queue processor
+- [ ] Create WebSocket gateway
+
+#### Day 3-4 ⏭️ PENDING
+- [ ] Redis running (user cần start Docker Desktop và chạy start-redis.bat)
+- [ ] Queue processor implementation
+- [ ] WebSocket gateway implementation
+- [ ] Test API endpoints
 
 ### Week 2 ✅
 - [ ] Board 1 components (PathSelector, TaskInput, TaskList)
