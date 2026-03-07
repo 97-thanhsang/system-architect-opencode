@@ -1,154 +1,154 @@
-# 🗺️ OpenCode Workflow Platform - Development Roadmap
+# 🗺️ OpenCode Workflow Platform - Roadmap
 
 > **Project**: OpenCode Workflow Management Platform  
 > **Location**: `E:\SOURCE\system-architect-opencode`  
-> **Tech Stack**: Angular 17+, Node.js/NestJS, WebSocket, Redis  
-> **Integration**: OpenCode Agents (ANALYZE, SOLUTION, EXECUTE, REVIEW)  
-> **Timeline**: Long-term, iterative development  
-> **Team**: Solo Developer
+> **Last Updated**: March 7, 2026
 
 ---
 
-## 📋 Executive Summary
+## 📋 Quick Navigation
 
-Xây dựng **SaaS Platform** giúp developers (FE/BE/QC/BA/PM) thực thi workflow chuẩn **Analyze → Solution → Execute → Review** thông qua giao diện Angular, tích hợp trực tiếp với Jira và OpenCode agents.
-
-**Core Value Proposition**:
-- 🎯 **No-code/Low-code** workflow execution cho OpenCode
-- ⚡ **Real-time** monitoring và progress tracking
-- 🔗 **Seamless Jira** integration
-- 📊 **Visual dashboard** cho task management
-- 🎨 **Configurable** workflow modules
+| Document | Purpose | Status |
+|----------|---------|--------|
+| **[FEATURE_ROADMAP.md](./FEATURE_ROADMAP.md)** | 🎯 Feature-based roadmap chính | Active |
+| **[features/](./features/)** | 📁 Chi tiết từng feature | Active |
+| **[guides/](./guides/)** | 📚 Hướng dẫn & tài liệu | Active |
+| **[archive/](./archive/)** | 📦 Tài liệu cũ (reference) | Archived |
 
 ---
 
-## 🎯 Phases Overview
-
-| Phase | Name | Duration | Focus | Status |
-|-------|------|----------|-------|--------|
-| **0** | Foundation & Architecture | 1-2 weeks | Setup, architecture, integration design | 📋 Planned |
-| **1** | MVP - Analyze Module | 4-5 weeks | Core analyze workflow, 3-board UI, real-time | 📋 Planned |
-| **2** | Workflow Expansion | 4-6 weeks | Solution + Execute modules, pipeline | 📋 Planned |
-| **3** | Advanced Features | 4-6 weeks | Dashboard, reporting, multi-task, analytics | 📋 Planned |
-| **4** | Multi-Role & Scale | 4-6 weeks | All roles (BE/QC/BA/PM), admin panel | 📋 Planned |
-| **5** | Polish & Production | Ongoing | Performance, testing, deployment | 📋 Planned |
-
-**Total Estimated Timeline**: 5-6 tháng cho MVP đầy đủ
-
----
-
-## 🏗️ Architecture Highlights
-
-### Integration Pattern: **Backend-for-Frontend (BFF) với Event-Driven Queue**
+## 🎯 Current Status
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                           ANGULAR FRONTEND                               │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐ │
-│  │  Dashboard   │  │  Board 1     │  │  Board 2     │  │  Board 3     │ │
-│  │  (Overview)  │  │  (Input)     │  │  (Progress)  │  │  (Output)    │ │
-│  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘ │
-│                              WebSocket                                   │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         NESTJS BACKEND (BFF)                             │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐ │
-│  │  Auth        │  │  Task        │  │  Queue       │  │  File        │ │
-│  │  Controller  │  │  Controller  │  │  Processor   │  │  Service     │ │
-│  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘ │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐                   │
-│  │  Jira        │  │  OpenCode    │  │  WebSocket   │                   │
-│  │  Integration │  │  Agent       │  │  Gateway     │                   │
-│  │  Service     │  │  Service     │  │  Service     │                   │
-│  └──────────────┘  └──────────────┘  └──────────────┘                   │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                    ┌───────────────┼───────────────┐
-                    ▼               ▼               ▼
-            ┌──────────┐    ┌──────────┐    ┌──────────┐
-            │  Redis   │    │  OpenCode│    │   Jira   │
-            │  Queue   │    │  Agents  │    │   API    │
-            └──────────┘    └──────────┘    └──────────┘
+Feature 01: Authentication     ✅ COMPLETED (100%)
+Feature 02: Task Queue         ⏭️ PENDING (0%)
+Feature 03: WebSocket          ⏭️ PENDING (0%)
+Feature 04: Analyze Module     ⏭️ PENDING (0%)
+Feature 05: Solution Module    ⏭️ PENDING (0%)
+Feature 06: Execute Module     ⏭️ PENDING (0%)
+Feature 07: Review Module      ⏭️ PENDING (0%)
+Feature 08: Dashboard          ⏭️ PENDING (0%)
 ```
 
-### Key Technical Decisions
-
-1. **Queue System**: BullMQ + Redis cho task processing
-2. **Real-time**: Socket.IO cho bidirectional communication
-3. **File Handling**: Multer + local filesystem (Phase 1), có thể mở rộng S3 sau
-4. **Authentication**: Jira OAuth 2.0
-5. **State Management**: RxJS BehaviorSubjects (đủ cho solo dev, có thể thêm NgRx sau nếu cần)
-6. **UI Components**: Angular Material + Custom components
+**Overall Progress**: 12.5% (1/8 features)
 
 ---
 
-## 📁 Roadmap Files
-
-- [Phase 0 - Foundation & Architecture](./phase-0-foundation.md)
-- [Phase 1 - MVP Analyze Module](./phase-1-mvp-analyze.md)
-- [Phase 2 - Workflow Expansion](./phase-2-workflow-expansion.md)
-- [Phase 3 - Advanced Features](./phase-3-advanced-features.md)
-- [Phase 4 - Multi-Role & Scale](./phase-4-multi-role.md)
-- [Architecture & Integration Guide](./architecture-integration.md)
-- [Project Setup Guide](./project-setup-guide.md)
-
----
-
-## 🚀 Quick Start
-
-1. **Đọc Phase 0** để hiểu architecture
-2. **Setup project** theo [Project Setup Guide](./project-setup-guide.md)
-3. **Bắt đầu Phase 1** - MVP Analyze Module
-4. **Sử dụng agents OpenCode** để hỗ trợ development:
-   - `/analyze-task` cho requirement analysis
-   - `/solution-task` cho technical design
-   - `/execute-task` cho implementation
-   - `/review-code` cho code review
-
----
-
-## 📊 Success Metrics
-
-### Phase 1 (MVP)
-- [ ] User có thể login qua Jira OAuth
-- [ ] User có thể input Jira task và run analyze
-- [ ] Real-time progress hiển thị đúng
-- [ ] Output files được generate và copy đúng location
-- [ ] UI responsive, không lỗi console
-
-### Phase 2-5
-- [ ] All 4 workflow modules hoạt động (Analyze/Solution/Execute/Review)
-- [ ] Pipeline execution (chạy liên tiếp nhiều tasks)
-- [ ] Dashboard Jira đầy đủ features
-- [ ] Multi-role support
-- [ ] Production deployment
-
----
-
-## 🔄 Development Workflow với OpenCode
-
-Mỗi phase sẽ sử dụng OpenCode workflow:
+## 📁 Folder Structure
 
 ```
-Requirements (User Story)
-    ↓
-/analyze-task → Analysis Report
-    ↓
-/solution-task → Technical Design
-    ↓
-/execute-task → Implementation
-    ↓
-/review-code → Quality Check
-    ↓
-Integration Test
-    ↓
-Next Phase / Deploy
+roadmap/
+├── README.md                      ← [BẠN ĐANG Ở ĐÂY]
+├── FEATURE_ROADMAP.md             ← Roadmap tổng quan
+│
+├── features/                      ← Chi tiết từng feature
+│   ├── 01-authentication.md      ✅ Hoàn thành
+│   ├── 02-task-queue.md          ⏭️ Chờ thực hiện
+│   ├── 03-websocket.md           ⏭️ Chờ thực hiện
+│   ├── 04-analyze-module.md      ⏭️ Chờ thực hiện
+│   ├── 05-solution-module.md     ⏭️ Chờ thực hiện
+│   ├── 06-execute-module.md      ⏭️ Chờ thực hiện
+│   ├── 07-review-module.md       ⏭️ Chờ thực hiện
+│   └── 08-dashboard.md           ⏭️ Chờ thực hiện
+│
+├── guides/                        ← Hướng dẫn
+│   ├── architecture.md           ← Kiến trúc hệ thống
+│   └── setup.md                  ← Hướng dẫn setup
+│
+└── archive/                       ← Lưu trữ (không active)
+    ├── _README.md                ← Giải thích archive
+    ├── execution-blueprint.md    ← Blueprint cũ (1000+ lines)
+    └── phase-based/              ← Roadmap theo phase (cũ)
+        ├── phase-0-foundation.md
+        ├── phase-1-mvp-analyze.md
+        ├── phase-2-workflow-expansion.md
+        ├── phase-3-advanced-features.md
+        └── phase-4-multi-role.md
 ```
 
 ---
 
-*Roadmap Version: 1.0.0*  
-*Last Updated: March 2026*  
-*Next Review: After Phase 1 completion*
+## 🚀 Bắt Đầu
+
+### Cho Developer Mới
+1. Đọc **[Setup Guide](./guides/setup.md)** để cài đặt project
+2. Xem **[Architecture Guide](./guides/architecture.md)** để hiểu kiến trúc
+3. Bắt đầu từ **Feature 1** để hiểu cách làm việc
+
+### Cho Ngườ Phát Triển Tiếp
+1. Xem **[FEATURE_ROADMAP.md](./FEATURE_ROADMAP.md)** để biết tổng quan
+2. Chọn feature tiếp theo từ thư mục **[features/](./features/)**
+3. Mỗi feature có đầy đủ thông tin để thực hiện
+
+---
+
+## 📊 Feature Matrix
+
+| # | Feature | Status | Priority | Est. Time | Dependencies |
+|---|---------|--------|----------|-----------|--------------|
+| 01 | Authentication | ✅ Done | Critical | 3 days | None |
+| 02 | Task Queue | ⏭️ Pending | High | 3 days | Feature 01 |
+| 03 | WebSocket | ⏭️ Pending | High | 2 days | Feature 01 |
+| 04 | Analyze Module | ⏭️ Pending | High | 7 days | Feature 01-03 |
+| 05 | Solution Module | ⏭️ Pending | Medium | 5 days | Feature 04 |
+| 06 | Execute Module | ⏭️ Pending | Medium | 5 days | Feature 04-05 |
+| 07 | Review Module | ⏭️ Pending | Medium | 4 days | Feature 06 |
+| 08 | Dashboard | ⏭️ Pending | Low | 4 days | All |
+
+---
+
+## 🔄 Development Workflow
+
+Mỗi feature tuân theo quy trình:
+
+```
+PLAN → ANALYZE → SOLUTION → EXECUTE → REVIEW → TEST → DOCUMENT
+```
+
+Sử dụng OpenCode agents:
+- `/analyze-task` - Phân tích yêu cầu
+- `/solution-task` - Thiết kế kỹ thuật
+- `/execute-task` - Implementation
+- `/review-code` - Code review
+
+---
+
+## 🎯 Next Action
+
+### Ngay Bây Giờ
+```bash
+# Bắt đầu Feature 2 (Task Queue)
+/dev "Implement Task Queue system với BullMQ và Redis cho xử lý background jobs" --quick
+```
+
+Hoặc
+
+```bash
+# Bắt đầu Feature 3 (WebSocket)
+/dev "Implement WebSocket Gateway cho real-time task progress updates" --quick
+```
+
+---
+
+## 📝 Changelog
+
+### March 7, 2026
+- ✅ Restructured roadmap to **feature-based**
+- ✅ Completed **Feature 01: Authentication**
+- ✅ Created placeholder docs for all 8 features
+- ✅ Archived old phase-based docs
+- ✅ Merged research + implementation reports
+
+---
+
+## 📚 Tài Liệu Liên Quan
+
+- [Project Root README](../README.md)
+- [AGENTS.md](../AGENTS.md)
+- [Angular Project Guide](../AGENTS.md)
+
+---
+
+**Roadmap Version**: 2.0 (Feature-Based)  
+**Maintainer**: System Architect Agent  
+**Last Updated**: March 7, 2026
