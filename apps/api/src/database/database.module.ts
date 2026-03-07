@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { User } from '../auth/entities/user.entity';
+import { Task } from '../tasks/entities/task.entity';
+import { Pipeline } from '../tasks/entities/pipeline.entity';
 
 @Module({
   imports: [
@@ -9,9 +12,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         type: 'sqlite',
-        database: 'opencode.db',
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
+        database: configService.get<string>('DATABASE_NAME') || 'opencode.db',
+        entities: [User, Task, Pipeline],
         synchronize: true, // Chỉ dùng cho development
+        logging: true, // Enable logging để debug
       }),
       inject: [ConfigService],
     }),

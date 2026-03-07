@@ -24,15 +24,13 @@ export class Task {
   jiraKey: string;
 
   @Column({
-    type: 'enum',
-    enum: TaskStatus,
+    type: 'varchar',
     default: TaskStatus.PENDING,
   })
   status: TaskStatus;
 
   @Column({
-    type: 'enum',
-    enum: TaskType,
+    type: 'varchar',
   })
   type: TaskType;
 

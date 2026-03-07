@@ -1,4 +1,8 @@
 import { Module } from '@nestjs/common';
+import { TasksGateway } from './tasks.gateway';
 
-@Module({})
+@Module({
+  providers: [TasksGateway],
+  exports: [TasksGateway],
+})
 export class WebsocketModule {}

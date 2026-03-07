@@ -25,15 +25,13 @@ export class Pipeline {
   name: string;
 
   @Column({
-    type: 'enum',
-    enum: PipelineStatus,
+    type: 'varchar',
     default: PipelineStatus.PENDING,
   })
   status: PipelineStatus;
 
   @Column({
-    type: 'enum',
-    enum: PipelineStep,
+    type: 'varchar',
     default: PipelineStep.ANALYZE,
   })
   currentStep: PipelineStep;

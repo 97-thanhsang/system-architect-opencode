@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { JiraAuthService } from '../../../../core/auth/jira-auth.service';
-import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-login-taiga',
@@ -970,13 +969,11 @@ export class LoginTaigaComponent {
     this.successMsg.set('');
 
     try {
-      const ok = await firstValueFrom(
-        this.jiraAuth.login({
-          username: this.username.trim(),
-          password: this.password,
-          jiraUrl: this.jiraUrl || undefined
-        })
-      );
+      const ok = await this.jiraAuth.login({
+        username: this.username.trim(),
+        password: this.password,
+        jiraUrl: this.jiraUrl || 'https://task.ascvn.com.vn'
+      });
 
       if (ok) {
         this.successMsg.set('Đăng nhập thành công! Đang chuyển hướng…');

@@ -63,7 +63,7 @@ export class AuthService {
         id: jiraUser.id,
         email: jiraUser.email,
         displayName: jiraUser.displayName,
-        avatarUrl: jiraUser.avatarUrl
+        avatarUrl: jiraUser.avatarUrl || undefined
       };
       this._user.set(user);
       this._isAuthenticated.set(true);

@@ -1,4 +1,8 @@
 import { Module } from '@nestjs/common';
+import { JiraClientService } from './jira-client.service';
 
-@Module({})
+@Module({
+  providers: [JiraClientService],
+  exports: [JiraClientService],
+})
 export class JiraModule {}
