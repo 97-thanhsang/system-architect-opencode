@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "workspace": {
+    "name": "system-architect-opencode",
+    "createdAt": 1772873130094,
+    "preset": "starter"
+  },
+  "authorizedRoots": [
+    "E:\\SOURCE\\system-architect-opencode"
+  ]
+}
