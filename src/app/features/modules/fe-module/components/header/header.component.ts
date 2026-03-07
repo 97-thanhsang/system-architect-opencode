@@ -104,7 +104,7 @@ export interface HeaderUser {
         </button>
 
         <!-- User avatar + dropdown -->
-        <div class="header__user-wrap" (clickOutside)="userMenu.set(false)">
+        <div class="header__user-wrap">
           <button
             class="header__avatar-btn"
             (click)="userMenu.set(!userMenu())"
