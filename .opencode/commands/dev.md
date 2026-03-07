@@ -1,567 +1,521 @@
 ---
-description: "Master orchestrator for development workflows - automatically analyzes requests and coordinates agents/commands/skills"
-argument-hint: "<request-description> [--quick] [--review-only] [--analyze-only]"
+description: "Master Orchestrator - Intelligent workflow coordinator that analyzes requests and dynamically selects optimal agents/commands/skills from both project and global config"
+argument-hint: "<request-description> [--dry-run] [--verbose]"
 ---
 
-# /dev - Development Orchestrator
+# `/dev` - Master Orchestrator
 
-Intelligent development workflow orchestrator that analyzes user requirements and automatically coordinates the optimal sequence of agents, commands, and skills.
+> **Purpose**: Intelligent workflow orchestrator that analyzes user requirements and dynamically coordinates agents, commands, and skills from both project and global OpenCode configuration.
+
+## Overview
+
+`/dev` acts as a **Master Orchestrator** that:
+1. **Scans** all available resources (agents/commands/skills) from:
+   - Project: `E:\SOURCE\system-architect-opencode\.opencode\`
+   - Global: `C:\Users\My PC\.config\opencode\`
+2. **Analyzes** user request using semantic pattern matching
+3. **Selects** optimal combination of resources for the task
+4. **Generates** orchestration prompt coordinating all selected resources
+5. **Executes** by invoking appropriate tools (task/skill/commands)
 
 ## Usage
 
+```bash
+# Basic usage - automatically selects optimal resources
+/dev "Implement refresh token authentication with JWT"
+
+# Dry run - show selected resources without executing
+/dev "Create Angular dashboard component" --dry-run
+
+# Verbose - show detailed matching logic
+/dev "Setup Redis queue system" --verbose
 ```
-/dev <mô-tả-yêu-cầu> [--quick] [--review-only] [--analyze-only]
+
+## Resource Discovery
+
+### 1. Project-Level Resources (`.opencode/`)
+
+```
+Project: E:\SOURCE\system-architect-opencode
+├── agents/           # 10 agents
+│   ├── ui-visual-validator.md
+│   ├── ui-ux-designer.md
+│   ├── accessibility-expert.md
+│   ├── design-system-architect.md
+│   ├── monorepo-architect.md
+│   ├── security-auditor.md
+│   ├── test-automator.md
+│   ├── typescript-pro.md
+│   ├── code-reviewer.md
+│   └── openwork.md
+├── commands/         # 20 commands
+│   ├── dev.md (this file)
+│   ├── generate-service.md
+│   ├── generate-component.md
+│   ├── angular-init.md
+│   ├── security-hardening.md
+│   ├── performance-optimization.md
+│   ├── test-generate.md
+│   ├── tdd-cycle.md
+│   ├── full-review.md
+│   └── ... (20 total)
+└── skills/           # 25 skills
+    ├── angular-signals/
+    ├── angular-forms/
+    ├── angular-routing/
+    ├── angular-http/
+    ├── typescript-advanced-types/
+    └── ... (25 total)
 ```
 
-**Examples:**
+### 2. Global Resources (`~/.config/opencode/`)
+
 ```
-/dev "Tạo trang quản lý ngườ dùng với danh sách, form thêm/sửa, validation"
-/dev "Review code module authentication" --review-only
-/dev "Tạo API service cho quản lý sản phẩm" --quick
-/dev "Phân tích yêu cầu tích hợp thanh toán" --analyze-only
+Global: C:\Users\My PC\.config\opencode
+├── agents/           # 11 agents
+│   ├── analyze.md
+│   ├── code.md
+│   ├── solution.md
+│   ├── review.md
+│   ├── ems-finance.md
+│   ├── integration.md
+│   ├── jira.md
+│   ├── codebase.md
+│   ├── system-architect.md
+│   ├── task-manager.md
+│   └── test.md
+├── commands/         # 8 command directories
+│   ├── codebase/
+│   ├── ctx7/
+│   ├── ems-finance/
+│   ├── mcp-jira-server/
+│   ├── system/
+│   ├── tasks/
+│   └── workflows/
+└── skills/           # 34 skills
+    ├── receival/
+    ├── execution/
+    ├── design-solution/
+    ├── reviewing-code/
+    ├── ems-finance-module-generator/
+    └── ... (34 total)
 ```
 
-**Flags:**
-- `--quick`: Bỏ qua phase ANALYZE và SOLUTION, đi thẳng vào EXECUTE
-- `--review-only`: Chỉ thực hiện code review
-- `--analyze-only`: Chỉ thực hiện phân tích, không code
+## Pattern Matching Engine
 
----
-
-## Step 1: Parse và Phân tích Request
-
-### 1.1 Extract Arguments
+### Semantic Analysis
 
 ```typescript
-// Parse from $ARGUMENTS
+interface RequestAnalysis {
+  domain: 'frontend' | 'backend' | 'security' | 'database' | 'testing' | 'devops';
+  technology: string[];        // ['angular', 'typescript', 'nestjs']
+  taskType: 'create' | 'modify' | 'review' | 'analyze' | 'fix' | 'optimize';
+  complexity: 'simple' | 'medium' | 'complex';
+  scope: 'component' | 'service' | 'module' | 'system' | 'architecture';
+}
+```
+
+### Resource Matching Matrix
+
+| Request Pattern | Agents | Commands | Skills |
+|----------------|--------|----------|--------|
+| **"Angular component"** | ui-ux-designer, typescript-pro | /generate-component | angular-signals, angular-forms, web-component-design |
+| **"API service"** | typescript-pro | /generate-service | angular-http, typescript-advanced-types |
+| **"Security/JWT/auth"** | security-auditor | /security-hardening, /security-sast | mcp-builder (for auth patterns) |
+| **"Test/unit test"** | test-automator | /test-generate, /tdd-cycle | angular-testing, test-generation |
+| **"Code review"** | code-reviewer | /full-review | reviewing-code, code-review-excellence |
+| **"Database/Redis"** | monorepo-architect | - | - |
+| **"Analyze task"** | analyze | - | receival |
+| **"Design solution"** | solution | - | design-solution |
+| **"Implement feature"** | code | - | execution |
+| **"Review code"** | review | - | reviewing-code |
+
+## Execution Workflow
+
+### Step 1: Parse Request
+
+```typescript
+// Parse user input
 const rawInput = $ARGUMENTS;
 const flags = {
-  quick: rawInput.includes('--quick'),
-  reviewOnly: rawInput.includes('--review-only'),
-  analyzeOnly: rawInput.includes('--analyze-only')
+  dryRun: rawInput.includes('--dry-run'),
+  verbose: rawInput.includes('--verbose')
 };
-const userRequest = rawInput.replace(/--(quick|review-only|analyze-only)/g, '').trim();
+const userRequest = rawInput.replace(/--(dry-run|verbose)/g, '').trim();
 ```
 
-### 1.2 Phân tích Yêu cầu
-
-**Xác định loại task:**
-- `FE_CRUD`: Frontend CRUD operations (list, form, validation)
-- `FE_COMPONENT`: UI component creation
-- `FE_PAGE`: Full page with routing
-- `API_DESIGN`: Backend API design
-- `INTEGRATION`: API + UI integration
-- `REFACTOR`: Code refactoring
-- `REVIEW`: Code review only
-- `BUGFIX`: Fix bugs
-- `PERFORMANCE`: Performance optimization
-- `SECURITY`: Security hardening
-
-**Xác định độ phức tạp:**
-- `SIMPLE`: 1-2 files, pattern rõ ràng
-- `MEDIUM`: 3-5 files, cần design
-- `COMPLEX`: 5+ files, cần full workflow
-
----
-
-## Step 2: Chọn Workflow
-
-### Decision Matrix
-
-```
-IF flags.reviewOnly:
-  → WORKFLOW = "REVIEW"
-  
-ELSE IF flags.analyzeOnly:
-  → WORKFLOW = "ANALYZE"
-  
-ELSE IF flags.quick AND complexity == "SIMPLE":
-  → WORKFLOW = "QUICK"
-  
-ELSE IF taskType == "REVIEW":
-  → WORKFLOW = "REVIEW"
-  
-ELSE IF complexity == "COMPLEX" OR taskType == "INTEGRATION":
-  → WORKFLOW = "FULL"
-  
-ELSE IF complexity == "MEDIUM":
-  → WORKFLOW = "STANDARD"
-  
-ELSE:
-  → WORKFLOW = "QUICK"
-```
-
-### Workflow Definitions
-
-#### WORKFLOW: FULL (4 phases)
-```
-ANALYZE → SOLUTION → EXECUTE → REVIEW
-```
-**Sử dụng khi**: Feature mới, độ phức tạp cao, cần design kỹ
-
-#### WORKFLOW: STANDARD (3 phases)
-```
-SOLUTION → EXECUTE → REVIEW
-```
-**Sử dụng khi**: Feature medium, pattern đã biết
-
-#### WORKFLOW: QUICK (2 phases)
-```
-EXECUTE → REVIEW
-```
-**Sử dụng khi**: Task đơn giản, urgent
-
-#### WORKFLOW: REVIEW (1 phase)
-```
-REVIEW
-```
-**Sử dụng khi**: User chỉ cần review code
-
-#### WORKFLOW: ANALYZE (1 phase)
-```
-ANALYZE
-```
-**Sử dụng khi**: User chỉ cần phân tích
-
----
-
-## Step 3: Xác định Tools
-
-### 3.1 Map Task Type → Tools
-
-#### Cho FE Nghiệp vụ (Angular):
-| Task | Tools |
-|------|-------|
-| Component mới | `/generate-component`, `ui-ux-designer` |
-| Service API | `/generate-service`, `typescript-pro` |
-| Forms | `angular-forms` skill |
-| Routing | `angular-routing` skill |
-| State Management | ANALYZE/SOLUTION agents |
-| Review | `code-reviewer`, `/full-review` |
-| Accessibility | `accessibility-expert` |
-| Testing | `test-automator`, `/test-generate` |
-
-#### Cho Integration:
-| Task | Tools |
-|------|-------|
-| API Specs | `/integration-api` |
-| UI Design | `/integration-design`, `ui-ux-designer` |
-| Implementation | CODE agent |
-
-#### Cho Security:
-| Task | Tools |
-|------|-------|
-| Audit | `security-auditor` |
-| SAST | `/security-sast` |
-| Dependencies | `/security-dependencies` |
-
-### 3.2 Build Tool Pipeline
+### Step 2: Discover Resources
 
 ```typescript
-const toolPipeline = [];
-
-// Phase 1: ANALYZE
-if (workflow.includes('ANALYZE')) {
-  toolPipeline.push({
-    phase: 'ANALYZE',
-    tool: 'ANALYZE agent',
-    command: '/analyze-task',
-    skill: 'receival',
-    purpose: 'Phân tích yêu cầu và tạo Analysis Report'
-  });
-}
-
-// Phase 2: SOLUTION
-if (workflow.includes('SOLUTION')) {
-  toolPipeline.push({
-    phase: 'SOLUTION',
-    tool: 'SOLUTION agent',
-    command: '/solution-task',
-    skill: 'design-solution',
-    purpose: 'Thiết kế solution kỹ thuật'
-  });
-}
-
-// Phase 3: EXECUTE
-if (workflow.includes('EXECUTE')) {
-  // Cho FE
-  if (taskType.startsWith('FE_')) {
-    toolPipeline.push({
-      phase: 'EXECUTE',
-      tool: 'CODE agent',
-      command: '/execute-task',
-      skill: 'execution',
-      purpose: 'Implementation'
-    });
-    
-    if (taskType === 'FE_COMPONENT' || taskType === 'FE_CRUD') {
-      toolPipeline.push({
-        phase: 'EXECUTE',
-        tool: '/generate-component',
-        purpose: 'Generate Angular components'
-      });
-    }
-    
-    if (taskType === 'FE_CRUD' || taskType === 'API_DESIGN') {
-      toolPipeline.push({
-        phase: 'EXECUTE',
-        tool: '/generate-service',
-        purpose: 'Generate services'
-      });
-    }
-  }
-  
-  // Cho Integration
-  if (taskType === 'INTEGRATION') {
-    toolPipeline.push({
-      phase: 'EXECUTE',
-      tool: '/integration-api',
-      purpose: 'Tạo API integration specs'
-    });
-    toolPipeline.push({
-      phase: 'EXECUTE',
-      tool: '/integration-design',
-      purpose: 'Tạo UI/UX design specs'
-    });
-  }
-}
-
-// Phase 4: REVIEW
-if (workflow.includes('REVIEW')) {
-  toolPipeline.push({
-    phase: 'REVIEW',
-    tool: 'REVIEW agent',
-    command: '/review-code',
-    skill: 'reviewing-code',
-    purpose: 'Code review'
-  });
-  
-  // Thêm specialized reviews
-  if (taskType === 'SECURITY') {
-    toolPipeline.push({
-      phase: 'REVIEW',
-      tool: 'security-auditor',
-      purpose: 'Security audit'
-    });
-  }
-  
-  if (taskType.startsWith('FE_')) {
-    toolPipeline.push({
-      phase: 'REVIEW',
-      tool: 'accessibility-expert',
-      purpose: 'Accessibility check'
-    });
-  }
-}
+// Scan both project and global resources
+const projectResources = scanProjectResources();
+const globalResources = scanGlobalResources();
+const allResources = mergeResources(projectResources, globalResources);
 ```
 
----
+### Step 3: Semantic Matching
 
-## Step 4: Present Plan cho User
+```typescript
+// Analyze request and match with resources
+const analysis = analyzeRequest(userRequest);
+const matchedResources = matchResources(analysis, allResources);
 
-### 4.1 Generate Summary
+// Priority: Project resources > Global resources
+// When both have same name, prefer project version
+```
+
+### Step 4: Generate Orchestration Plan
+
+```typescript
+const orchestrationPlan = {
+  request: userRequest,
+  analysis: analysis,
+  phases: [
+    {
+      name: 'Phase 1: Analysis/Setup',
+      resources: matchedResources.filter(r => r.phase === 1),
+      executionOrder: determineExecutionOrder(phase1Resources)
+    },
+    {
+      name: 'Phase 2: Implementation',
+      resources: matchedResources.filter(r => r.phase === 2),
+      executionOrder: determineExecutionOrder(phase2Resources)
+    },
+    {
+      name: 'Phase 3: Review/Validation',
+      resources: matchedResources.filter(r => r.phase === 3),
+      executionOrder: determineExecutionOrder(phase3Resources)
+    }
+  ],
+  estimatedTime: calculateEstimatedTime(matchedResources),
+  totalResources: matchedResources.length
+};
+```
+
+### Step 5: Present Plan (if not dry-run)
 
 ```markdown
-# 🎯 Development Plan
+# 🎯 Orchestration Plan
 
-## Yêu cầu
-${userRequest}
+## Request
+"${userRequest}"
 
-## Phân tích
-- **Loại task**: ${taskType}
-- **Độ phức tạp**: ${complexity}
-- **Workflow**: ${workflow}
+## Analysis
+- **Domain**: ${analysis.domain}
+- **Technology**: ${analysis.technology.join(', ')}
+- **Task Type**: ${analysis.taskType}
+- **Complexity**: ${analysis.complexity}
+- **Scope**: ${analysis.scope}
 
-## Các bước thực hiện
-${toolPipeline.map((step, index) => `
-### Bước ${index + 1}: ${step.phase}
-- **Tool**: ${step.tool}
-- **Mục đích**: ${step.purpose}
+## Selected Resources (${totalResources} total)
+
+### Phase 1: ${phase1.name}
+${phase1.resources.map(r => `- **${r.type}**: ${r.name} (${r.source})
+  - Purpose: ${r.purpose}`).join('\n')}
+
+### Phase 2: ${phase2.name}
+${phase2.resources.map(r => `- **${r.type}**: ${r.name} (${r.source})
+  - Purpose: ${r.purpose}`).join('\n')}
+
+### Phase 3: ${phase3.name}
+${phase3.resources.map(r => `- **${r.type}**: ${r.name} (${r.source})
+  - Purpose: ${r.purpose}`).join('\n')}
+
+## Execution Strategy
+${orchestrationPlan.phases.map((phase, i) => `
+### ${phase.name}
+${phase.executionOrder.map((resource, j) => `${j + 1}. Invoke ${resource.type}: ${resource.name}
+   - Action: ${resource.action}
+   - Expected Output: ${resource.expectedOutput}`).join('\n')}
 `).join('\n')}
 
 ## ⏱️ Estimation
-- **Thời gian dự kiến**: ${estimateTime(workflow, complexity)}
-- **Số files dự kiến**: ${estimateFiles(taskType, complexity)}
+- **Total Time**: ${estimatedTime}
+- **Phases**: ${phases.length}
+- **Agents**: ${agentCount}
+- **Commands**: ${commandCount}
+- **Skills**: ${skillCount}
 
 ---
-
-**Bạn có muốn tôi tiếp tục với plan này không?** (Y/N/Modify)
-- Y: Bắt đầu thực thi
-- N: Hủy
-- Modify: Điều chỉnh plan
+**Execute this plan?** (Y/N/Modify)
 ```
 
-### 4.2 Wait for User Confirmation
-
-**PAUSE** - Chờ user phản hồi trước khi tiếp tục.
-
----
-
-## Step 5: Thực thi Workflow (Sau khi User đồng ý)
-
-### 5.1 Execute từng Phase
+### Step 6: Execute Plan
 
 ```typescript
-for (const step of toolPipeline) {
-  // Hiển thị progress
-  console.log(`\n🚀 Đang thực hiện: ${step.phase} - ${step.tool}`);
+async function executePlan(plan) {
+  const results = [];
   
-  // Invoke tool
-  if (step.tool.includes('agent')) {
-    // Sử dụng task() cho agents
-    await task({
-      description: `${step.phase}: ${step.purpose}`,
-      prompt: buildPrompt(step, userRequest, context),
-      subagent_type: extractAgentType(step.tool)
-    });
-  } else if (step.tool.startsWith('/')) {
-    // Sử dụng skill() cho commands
-    await skill({ name: step.tool.substring(1) });
+  for (const phase of plan.phases) {
+    console.log(`\n🚀 Executing: ${phase.name}`);
+    
+    for (const resource of phase.executionOrder) {
+      try {
+        let result;
+        
+        switch (resource.type) {
+          case 'agent':
+            // Use task() to invoke agent
+            result = await task({
+              description: `${phase.name}: ${resource.name}`,
+              prompt: buildAgentPrompt(resource, plan.request, results),
+              subagent_type: extractAgentType(resource.name)
+            });
+            break;
+            
+          case 'command':
+            // Some commands may use skill() or direct execution
+            result = await executeCommand(resource, plan.request, results);
+            break;
+            
+          case 'skill':
+            // Use skill() to load and execute
+            result = await skill({ name: resource.name });
+            break;
+        }
+        
+        results.push({
+          phase: phase.name,
+          resource: resource.name,
+          type: resource.type,
+          result: result,
+          status: 'success'
+        });
+        
+        console.log(`✅ Completed: ${resource.name}`);
+        
+      } catch (error) {
+        results.push({
+          phase: phase.name,
+          resource: resource.name,
+          type: resource.type,
+          error: error.message,
+          status: 'failed'
+        });
+        
+        console.error(`❌ Failed: ${resource.name} - ${error.message}`);
+        
+        // Ask user whether to continue or abort
+        const shouldContinue = await askUserContinue();
+        if (!shouldContinue) break;
+      }
+    }
   }
   
-  // Report progress
-  console.log(`✅ Hoàn thành: ${step.phase}`);
+  return results;
 }
 ```
 
-### 5.2 Build Context-Aware Prompts
+## Prompt Templates
+
+### Agent Prompt Builder
 
 ```typescript
-function buildPrompt(step, userRequest, accumulatedContext) {
-  const basePrompt = {
-    ANALYZE: `
-Phân tích yêu cầu sau và tạo Analysis Report:
-"${userRequest}"
-
-Yêu cầu:
-1. Phân tích business requirements
-2. Xác định technical requirements  
-3. Liệt kê các components/modules cần tạo
-4. Đánh giá complexity và risks
-5. Đề xuất technical approach
-
-Output: Analysis Report theo chuẩn receival skill v3.1
-`,
-    SOLUTION: `
-Thiết kế solution kỹ thuật cho:
-"${userRequest}"
-
-Context từ Analysis:
-${accumulatedContext.analyzeReport}
-
-Yêu cầu:
-1. Thiết kế kiến trúc tổng thể
-2. Định nghĩa data models và interfaces
-3. Thiết kế component hierarchy
-4. State management strategy
-5. API integration approach
-6. Testing strategy
-
-Output: Solution Design Document theo chuẩn design-solution skill v7.0
-`,
-    EXECUTE: `
-Thực thi implementation cho:
-"${userRequest}"
-
-Context:
-- Analysis: ${accumulatedContext.analyzeReport}
-- Solution: ${accumulatedContext.solutionDesign}
-
-Yêu cầu:
-1. Tạo các files theo solution design
-2. Tuân thủ coding standards (EMS Finance 4-layer)
-3. Sử dụng Angular 17+, Signals, Standalone components
-4. Viết tests cho business logic
-5. Đảm bảo type safety
-
-Output: Code implementation hoàn chỉnh
-`,
-    REVIEW: `
-Review code đã implement cho:
-"${userRequest}"
-
-Yêu cầu:
-1. Code quality review (clean code, DRY, SOLID)
-2. Security review (OWASP, input validation)
-3. Performance review (change detection, memory leaks)
-4. Angular best practices review
-5. TypeScript strict mode compliance
-6. Testing coverage review
-
-Output: Review Report với findings và recommendations
-`
-  };
+function buildAgentPrompt(resource, request, previousResults) {
+  const context = previousResults.length > 0 
+    ? `\n## Previous Results\n${previousResults.map(r => `- ${r.resource}: ${r.status}`).join('\n')}`
+    : '';
   
-  return basePrompt[step.phase];
+  return `
+# Task: ${request}
+
+## Your Role
+You are the **${resource.name}** agent.
+${resource.description}
+
+## Context
+This task is part of an orchestrated workflow. ${context}
+
+## Specific Instructions
+${resource.specificInstructions || 'Execute your specialty to fulfill the request.'}
+
+## Output
+${resource.expectedOutput || 'Provide your expert output based on your capabilities.'}
+
+## Request Details
+"${request}"
+
+---
+Proceed with your task using your specialized capabilities.
+`;
 }
 ```
 
----
+### Command Execution
 
-## Step 6: Tổng kết và Báo cáo
-
-### 6.1 Generate Final Report
-
-```markdown
-# ✅ Development Complete
-
-## Tóm tắt
-- **Yêu cầu**: ${userRequest}
-- **Workflow**: ${workflow}
-- **Thời gian**: ${actualTime}
-
-## Các bước đã thực hiện
-${completedSteps.map((step, i) => `${i + 1}. ✅ ${step.phase}: ${step.tool}`).join('\n')}
-
-## Files đã tạo/cập nhật
-${generatedFiles.map(f => `- ${f.path} (${f.type})`).join('\n')}
-
-## Key Highlights
-- [Liệt kê những điểm nổi bật của implementation]
-
-## Next Steps (Optional)
-- [Gợi ý các bước tiếp theo nếu có]
-
-## Cần Review
-${needsReview ? 'Một số phần cần review thêm, tôi đã đánh dấu trong code.' : 'Tất cả đã hoàn thiện.'}
+```typescript
+async function executeCommand(resource, request, previousResults) {
+  // Commands can be:
+  // 1. Skill-based (use skill() tool)
+  // 2. Agent-based (use task() tool)
+  // 3. Direct execution (custom logic)
+  
+  const commandConfig = loadCommandConfig(resource.path);
+  
+  if (commandConfig.type === 'skill') {
+    return await skill({ name: commandConfig.skillName });
+  } else if (commandConfig.type === 'agent') {
+    return await task({
+      description: commandConfig.description,
+      prompt: commandConfig.buildPrompt(request, previousResults),
+      subagent_type: commandConfig.agentType
+    });
+  } else {
+    // Direct execution logic defined in command file
+    return await commandConfig.execute(request, previousResults);
+  }
+}
 ```
-
-### 6.2 Offer Next Actions
-
-```markdown
----
-
-## 🔄 Next Actions?
-
-1. **/dev** "[Yêu cầu tiếp theo]" - Tiếp tục feature mới
-2. **/review-code** - Review code vừa tạo chi tiết hơn
-3. **/test-generate** - Tạo thêm test cases
-4. **/doc-generate** - Tạo documentation
-5. **Kết thúc** - Dừng tại đây
-```
-
----
-
-## Error Handling
-
-### Nếu User từ chối Plan
-```
-User: N
-→ "Đã hủy. Bạn có muốn điều chỉnh yêu cầu không?"
-```
-
-### Nếu User muốn Modify
-```
-User: Modify
-→ "Bạn muốn điều chỉnh gì? (Thêm/bớt bước, đổi tool, etc.)"
-→ Parse input và rebuild plan
-→ Present lại cho user
-```
-
-### Nếu Tool thất bại
-```
-→ Báo lỗi rõ ràng cho user
-→ Đề xuất alternative approach
-→ Hỏi user có muốn retry, skip, hay modify
-```
-
----
 
 ## Examples
 
-### Example 1: FE CRUD Feature
-```
-User: /dev "Tạo trang quản lý ngườ dùng với danh sách, form thêm/sửa, validation"
+### Example 1: Refresh Token Implementation
 
-AI:
-🎯 Development Plan
-
-Yêu cầu: Tạo trang quản lý ngườ dùng với danh sách, form thêm/sửa, validation
-
-Phân tích:
-- Loại task: FE_CRUD
-- Độ phức tạp: MEDIUM
-- Workflow: STANDARD (SOLUTION → EXECUTE → REVIEW)
-
-Các bước thực hiện:
-
-### Bước 1: SOLUTION
-- Tool: SOLUTION agent
-- Mục đích: Thiết kế kiến trúc và component hierarchy
-
-### Bước 2: EXECUTE  
-- Tool: CODE agent + /generate-component + /generate-service
-- Mục đích: Tạo components và services
-
-### Bước 3: REVIEW
-- Tool: REVIEW agent + code-reviewer
-- Mục đích: Code review và quality check
-
-⏱️ Estimation: 45-60 phút
-📁 Files dự kiến: 6-8 files
-
-Bạn có muốn tôi tiếp tục? (Y/N/Modify)
+```bash
+/dev "Implement refresh token authentication with access token 15min, refresh token 7 days, token rotation, CSRF protection"
 ```
 
-### Example 2: Quick Fix
+**Analysis:**
+- Domain: security
+- Technology: [jwt, authentication, security]
+- Task Type: create
+- Complexity: complex
+- Scope: system
+
+**Selected Resources:**
+- **Phase 1 (Architecture)**: security-auditor agent, /security-hardening command
+- **Phase 2 (Implementation)**: typescript-pro agent, /generate-service command, typescript-advanced-types skill
+- **Phase 3 (Validation)**: code-reviewer agent, /full-review command, reviewing-code skill
+
+**Execution:**
+1. security-auditor: Review security best practices
+2. /security-hardening: Apply security configurations
+3. typescript-pro: Design token architecture
+4. /generate-service: Generate NestJS service
+5. typescript-advanced-types: Ensure type safety
+6. code-reviewer: Review implementation
+7. /full-review: Comprehensive review
+8. reviewing-code skill: Final validation
+
+### Example 2: Angular Component
+
+```bash
+/dev "Create a user profile dashboard with tabs, forms, and real-time updates using Angular 17 signals"
 ```
-User: /dev "Fix lỗi validation không hiển thị error message" --quick
 
-AI:
-🎯 Quick Fix Plan
+**Analysis:**
+- Domain: frontend
+- Technology: [angular, typescript, signals]
+- Task Type: create
+- Complexity: medium
+- Scope: component
 
-Yêu cầu: Fix lỗi validation không hiển thị error message
-Phân tích:
-- Loại task: BUGFIX
-- Độ phức tạp: SIMPLE
-- Workflow: QUICK (EXECUTE → REVIEW)
+**Selected Resources:**
+- **Phase 1**: ui-ux-designer agent, angular-signals skill
+- **Phase 2**: /generate-component command, typescript-pro agent, angular-forms skill
+- **Phase 3**: ui-visual-validator agent, test-automator agent
 
-Các bước:
-1. EXECUTE: CODE agent - Fix validation logic
-2. REVIEW: Quick review của changes
+### Example 3: API Integration
 
-⏱️ Estimation: 10-15 phút
-
-Bạn có muốn tôi tiếp tục? (Y/N/Modify)
+```bash
+/dev "Design and implement REST API for task queue management with Redis and BullMQ"
 ```
 
-### Example 3: Review Only
+**Analysis:**
+- Domain: backend
+- Technology: [nestjs, redis, queue, api]
+- Task Type: create
+- Complexity: complex
+- Scope: architecture
+
+**Selected Resources:**
+- **Phase 1**: monorepo-architect agent (project structure)
+- **Phase 2**: typescript-pro agent, /generate-service command (x3 services)
+- **Phase 3**: code-reviewer agent, test-automator agent
+
+## Resource Priority Rules
+
+### 1. Source Priority
 ```
-User: /dev "Review code module authentication" --review-only
-
-AI:
-🎯 Review Plan
-
-Yêu cầu: Review code module authentication
-Workflow: REVIEW
-
-Các bước:
-1. /full-review - Comprehensive code review
-2. security-auditor agent - Security audit
-3. code-reviewer agent - Quality review
-
-⏱️ Estimation: 20-30 phút
-
-Bạn có muốn tôi tiếp tục? (Y/N/Modify)
+Project resources > Global resources
 ```
+- When both project and global have same resource name, prefer project version
+- Project resources override global with same functionality
+
+### 2. Type Priority
+```
+For execution order:
+1. Skills (setup/configuration)
+2. Agents (analysis/design)
+3. Commands (generation/execution)
+4. Agents (review/validation)
+```
+
+### 3. Phase Assignment
+```
+Phase 1 (Analysis): analyze, receival, design-solution, security-auditor
+Phase 2 (Implementation): code, execution, generate-*, typescript-pro, ui-ux-designer
+Phase 3 (Review): review, reviewing-code, code-reviewer, test-automator, accessibility-expert
+```
+
+## Error Handling
+
+### Resource Not Found
+```typescript
+if (matchedResources.length === 0) {
+  console.warn(`⚠️ No matching resources found for: "${request}"`);
+  console.log(`Available domains: frontend, backend, security, database, testing`);
+  console.log(`Try rephrasing your request or use more specific keywords.`);
+  return;
+}
+```
+
+### Execution Failure
+```typescript
+try {
+  await executeResource(resource);
+} catch (error) {
+  console.error(`❌ ${resource.name} failed: ${error.message}`);
+  
+  const options = await askUser(`
+What would you like to do?
+1. Retry ${resource.name}
+2. Skip to next resource
+3. Modify and retry
+4. Abort entire workflow
+  `);
+  
+  switch (options) {
+    case '1': await executeResource(resource); break;
+    case '2': continue;
+    case '3': /* modify and retry */ break;
+    case '4': return;
+  }
+}
+```
+
+## Integration with OpenCode System
+
+### Loading Order
+1. Parse command arguments
+2. Discover resources from:
+   - `E:\SOURCE\system-architect-opencode\.opencode\` (project)
+   - `C:\Users\My PC\.config\opencode\` (global)
+3. Merge and deduplicate (project wins)
+4. Analyze request and match resources
+5. Generate orchestration plan
+6. Present to user (unless --dry-run)
+7. Execute upon confirmation
+8. Report results
+
+### State Management
+- Track execution results across phases
+- Pass context between resources
+- Maintain conversation history
+- Support for retry and modification
 
 ---
 
-## Integration với Hệ thống
-
-### Luôn tuân thủ:
-1. **AGENTS.md** - Đọc project context trước khi làm
-2. **IAM v3.1** - Sử dụng đúng ACCESS_LEVEL
-3. **State Management** - Cập nhật task state qua task-manager skill
-4. **Context7** - Research khi cần thông tin mới
-5. **Rule Enforcement** - Tuân thủ các RULE_IDS được resolve
-
-### Không bao giờ:
-1. Thực thi ngay không hỏi user
-2. Bỏ qua error handling
-3. Ignore project conventions (EMS Finance 4-layer, Angular 17 patterns)
-4. Hardcode paths - luôn resolve từ machine config
-
----
-
-_Dev Orchestrator Command v1.0_
+**Version**: 2.0 (Master Orchestrator)
+**Author**: System Architect Agent
+**Last Updated**: March 7, 2026
