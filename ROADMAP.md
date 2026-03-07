@@ -1,9 +1,8 @@
 # System Architect OpenCode - Roadmap
 
 > **Project**: system-architect-opencode  
-> **Last Updated**: March 7, 2026  
-> **Version**: 2.0.0 (Dashboard Refactor Complete)
-
+> **Last Updated**: March 8, 2026
+> **Version**: 2.2.0 (Routing & Core UI Fixes Complete)
 ---
 
 ## 📋 Table of Contents
@@ -98,6 +97,29 @@ Fixed build errors in shared sidebar component:
 
 ---
 
+### v2.2.0 - Core Routing & UI Enhancements
+**Date**: March 8, 2026  
+**Status**: ✅ COMPLETE  
+**Priority**: High
+
+#### Summary
+Hoàn thiện cấu trúc routing phân quyền (FE, BE, QC, BA) và xử lý triệt để các lỗi UI cốt lõi liên quan đến CSS, Sidebar, và Header.
+
+#### Changes Made
+
+| Component / Module | Change Type | Description |
+|--------------------|-------------|-------------|
+| `routing` | Feature | Hoàn thiện cấu trúc module routing riêng biệt cho FE, BE, QC, BA |
+| `sidebar` | Bugfix | Sửa lỗi hiển thị, trạng thái active, và tính tương tác của navigation |
+| `header` | Bugfix | Xử lý lỗi layout, responsive, profile menu trên header |
+| `CSS` | Bugfix/UI | Khắc phục các vấn đề CSS cục bộ và toàn cục để giao diện đồng nhất |
+
+#### Impact
+- **Navigation & Access**: Phân luồng người dùng chính xác, an toàn, độc lập giữa các role (FE, BE, QC, BA).
+- **UI Consistency**: Layout shell ổn định, sidebar và header hoạt động hoàn hảo trên mọi kích thước màn hình.
+
+---
+
 ## In Progress 🚧
 
 ### None currently
@@ -106,7 +128,7 @@ Fixed build errors in shared sidebar component:
 
 ## Planned 📅
 
-### v2.1.0 - Design System Standardization
+### v2.3.0 - Design System Standardization
 **Target Date**: Q2 2026  
 **Priority**: High
 
@@ -139,7 +161,7 @@ Standardize remaining components to use Google Design System consistently.
 
 ---
 
-### v2.2.0 - Testing & Quality
+### v2.4.0 - Testing & Quality
 **Target Date**: Q2-Q3 2026  
 **Priority**: Medium
 
@@ -170,7 +192,7 @@ Improve test coverage and code quality across the application.
 
 ---
 
-### v2.3.0 - Feature Enhancements
+### v2.5.0 - Feature Enhancements
 **Target Date**: Q3 2026  
 **Priority**: Medium
 
@@ -354,12 +376,12 @@ Build warnings about Taiga UI CommonJS modules:
 
 ## 🎯 Key Metrics
 
-### Current State (v2.0.0)
+### Current State (v2.2.0)
 
 | Metric | Value | Target |
 |--------|-------|--------|
-| **Components Refactored** | 1/15 | 15/15 |
-| **Design System Compliance** | 15% | 100% |
+| **Components Refactored** | 4/15 | 15/15 |
+| **Design System Compliance** | 30% | 100% |
 | **Test Coverage** | ~30% | 80% |
 | **Bundle Size** | ~1.5MB | <1MB |
 | **Build Warnings** | 5 | 0 |
@@ -367,7 +389,7 @@ Build warnings about Taiga UI CommonJS modules:
 ### Progress Tracking
 
 ```
-Design System Migration: ████░░░░░░ 15% (1/15 components)
+Design System Migration: ██████░░░░ 30% (4/15 components)
 Test Coverage:           ███░░░░░░░ 30%
 Documentation:           ██░░░░░░░░ 20%
 Performance:             █████░░░░░ 50%
@@ -379,6 +401,8 @@ Performance:             █████░░░░░ 50%
 
 ### Sprint 1 (March 2026)
 - [x] Dashboard refactor complete
+- [x] Core routing modules (FE, BE, QC, BA) complete
+- [x] Layout UI bugs (CSS, sidebar, header) fixed
 - [ ] Auth module standardization
 - [ ] Setup ESLint and Prettier
 
@@ -454,5 +478,5 @@ When adding new items to this roadmap:
 ---
 
 **Maintained by**: System Architect Agent  
-**Last Review**: March 7, 2026  
+**Last Review**: March 8, 2026  
 **Next Review**: April 7, 2026
