@@ -2,7 +2,13 @@ import { Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import type { MenuItem } from '../../services/layout.service';
-import type { JiraUser } from '../../../../../core/auth/jira-auth.service';
+
+/** Sidebar-local user shape — always non-null, always has displayName */
+export interface SidebarUser {
+  displayName: string;
+  email: string;
+  role?: string; // shown as badge when displayName is a fallback
+}
 
 @Component({
   selector: 'app-sidebar',
@@ -45,35 +51,33 @@ import type { JiraUser } from '../../../../../core/auth/jira-auth.service';
 
       <!-- User Footer ─────────────────────────────── -->
       <div class="sidebar__footer">
-        @if (user(); as u) {
-          <div class="sidebar__user" [class.sidebar__user--collapsed]="collapsed()">
-            <!-- Avatar -->
-            <div class="g-avatar g-avatar--sm sidebar__avatar"
-                 [style.background]="avatarColor(u.displayName)">
-              {{ initials(u.displayName) }}
-            </div>
-
-            @if (!collapsed()) {
-              <div class="sidebar__user-info">
-                <span class="sidebar__user-name">{{ u.displayName }}</span>
-                <span class="sidebar__user-email">{{ u.email }}</span>
-              </div>
-              <button
-                class="sidebar__logout"
-                (click)="logout.emit()"
-                title="Đăng xuất">
-                <span class="material-icons-outlined" style="font-size:18px">logout</span>
-              </button>
-            } @else {
-              <button
-                class="sidebar__logout sidebar__logout--center"
-                (click)="logout.emit()"
-                title="Đăng xuất">
-                <span class="material-icons-outlined" style="font-size:18px">logout</span>
-              </button>
-            }
+        <div class="sidebar__user" [class.sidebar__user--collapsed]="collapsed()">
+          <!-- Avatar — always shown, uses sidebarUser() fallback -->
+          <div class="g-avatar g-avatar--sm sidebar__avatar"
+               [style.background]="avatarColor(sidebarUser().displayName)">
+            {{ initials(sidebarUser().displayName) }}
           </div>
-        }
+
+          @if (!collapsed()) {
+            <div class="sidebar__user-info">
+              <span class="sidebar__user-name">{{ sidebarUser().displayName }}</span>
+              <span class="sidebar__user-email">{{ sidebarUser().email }}</span>
+            </div>
+            <button
+              class="sidebar__logout"
+              (click)="logout.emit()"
+              title="Đăng xuất">
+              <span class="material-icons-outlined" style="font-size:18px">logout</span>
+            </button>
+          } @else {
+            <button
+              class="sidebar__logout sidebar__logout--center"
+              (click)="logout.emit()"
+              title="Đăng xuất">
+              <span class="material-icons-outlined" style="font-size:18px">logout</span>
+            </button>
+          }
+        </div>
       </div>
 
       <!-- Collapse Toggle ─────────────────────────── -->
@@ -99,7 +103,9 @@ import type { JiraUser } from '../../../../../core/auth/jira-auth.service';
       flex-direction: column;
       z-index: 200;
       transition: width .25s cubic-bezier(.4,0,.2,1);
-      overflow: hidden;
+      /* KHÔNG đặt overflow: hidden ở đây vì sẽ clip .sidebar__toggle (right: -14px).
+         Thay vào đó, overflow được quản lý ở từng child cụ thể. */
+      overflow: visible;
 
       &--collapsed {
         width: var(--sidebar-collapsed-width, 72px);
@@ -135,6 +141,7 @@ import type { JiraUser } from '../../../../../core/auth/jira-auth.service';
       gap: 12px;
       padding: 0 20px;
       flex-shrink: 0;
+      overflow: hidden; /* ẩn logo-text khi sidebar thu nhỏ */
     }
 
     .sidebar__logo-icon {
@@ -170,7 +177,7 @@ import type { JiraUser } from '../../../../../core/auth/jira-auth.service';
       flex: 0 0 auto;
       padding: 8px 0;
       overflow-y: auto;
-      overflow-x: hidden;
+      overflow-x: hidden; /* ẩn label text khi sidebar thu nhỏ */
     }
 
     .sidebar__item {
@@ -226,6 +233,7 @@ import type { JiraUser } from '../../../../../core/auth/jira-auth.service';
     .sidebar__footer {
       padding: 12px 0;
       flex-shrink: 0;
+      overflow: hidden; /* ẩn user info text khi sidebar thu nhỏ */
     }
 
     .sidebar__user {
@@ -295,10 +303,15 @@ import type { JiraUser } from '../../../../../core/auth/jira-auth.service';
     }
 
     /* ── Toggle button ─────────────────────────────── */
+    /*
+     * ROOT CAUSE FIX: Button từng bị clip bởi overflow: hidden của .sidebar.
+     * Giải pháp: .sidebar giờ dùng overflow: visible, overflow được quản lý
+     * tại từng child. Button nhô ra right: -14px sẽ không bị cắt nữa.
+     */
     .sidebar__toggle {
       position: absolute;
-      right: -14px;
-      top: 72px;
+      right: -14px;        /* nhô ra ngoài mép phải: button center nằm tại border */
+      top: 72px;           /* dưới header (64px) + 8px gap */
       width: 28px;
       height: 28px;
       border-radius: 50%;
@@ -312,7 +325,7 @@ import type { JiraUser } from '../../../../../core/auth/jira-auth.service';
       color: #5f6368;
       transition: background .15s, color .15s, opacity .15s;
       opacity: 0;
-      z-index: 10;
+      z-index: 201; /* trên sidebar z-index: 200 */
 
       &:hover { background: #e8f0fe; color: #1a73e8; }
     }
@@ -342,18 +355,56 @@ import type { JiraUser } from '../../../../../core/auth/jira-auth.service';
 export class SidebarComponent {
   collapsed  = input<boolean>(false);
   menuItems  = input<MenuItem[]>([]);
-  user       = input<JiraUser | null>(null);
+  /** Raw user từ JiraAuthService — có thể null khi chưa login hoặc không có backend */
+  user       = input<{ displayName?: string; jiraDisplayName?: string; name?: string; username?: string; email?: string } | null>(null);
+  /** Fallback role label khi không có user thật (ví dụ: 'FE', 'BE') */
+  roleLabel  = input<string>('');
 
   toggleSidebar = output<void>();
   logout        = output<void>();
 
-  initials(name: string): string {
-    return name.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase();
+  /**
+   * Resolve a safe SidebarUser từ raw user input.
+   * Luôn trả về object có displayName và email — không bao giờ null/undefined.
+   */
+  sidebarUser(): SidebarUser {
+    const u = this.user();
+    if (u) {
+      const displayName = u.displayName || u.jiraDisplayName || u.name || u.username || 'User';
+      const email = u.email || '';
+      return { displayName, email };
+    }
+    // Fallback khi không có user: dùng role label
+    const role = this.roleLabel() || 'Guest';
+    return {
+      displayName: role,
+      email: `${role.toLowerCase()}@system`,
+      role,
+    };
   }
 
+  /**
+   * Tạo initials từ displayName — safe khi chuỗi rỗng hoặc 1 từ.
+   * "Nguyen Van A" → "NA", "FE" → "FE", "" → "?"
+   */
+  initials(name: string): string {
+    if (!name || !name.trim()) return '?';
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 1) {
+      // Single word: lấy 2 ký tự đầu
+      return parts[0].slice(0, 2).toUpperCase();
+    }
+    // Multi word: lấy ký tự đầu của word 1 và word cuối
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+
+  /**
+   * Chọn màu avatar ổn định dựa trên charCode của ký tự đầu.
+   * Safe khi name rỗng — fallback về màu đầu tiên.
+   */
   avatarColor(name: string): string {
-    const colors = ['#1a73e8','#34a853','#ea4335','#f9ab00','#9334e6','#0f9d58'];
-    const i = name.charCodeAt(0) % colors.length;
-    return colors[i];
+    const colors = ['#1a73e8', '#34a853', '#ea4335', '#f9ab00', '#9334e6', '#0f9d58'];
+    if (!name || name.length === 0) return colors[0];
+    return colors[name.charCodeAt(0) % colors.length];
   }
 }

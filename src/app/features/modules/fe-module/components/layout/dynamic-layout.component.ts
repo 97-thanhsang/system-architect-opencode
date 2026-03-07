@@ -5,6 +5,7 @@ import { SidebarComponent } from '../sidebar/sidebar.component';
 import { HeaderComponent } from '../header/header.component';
 import { LayoutService } from '../../services/layout.service';
 import { JiraAuthService } from '../../../../../core/auth/jira-auth.service';
+import { AuthService } from '../../../../../core/auth/auth.service';
 
 @Component({
   selector: 'app-dynamic-layout',
@@ -19,6 +20,7 @@ import { JiraAuthService } from '../../../../../core/auth/jira-auth.service';
           [collapsed]="layoutService.sidebarCollapsed()"
           [menuItems]="menuItems()"
           [user]="jiraAuth.user()"
+          [roleLabel]="roleFallbackLabel()"
           (toggleSidebar)="layoutService.toggleSidebar()"
           (logout)="jiraAuth.logout()" />
       }
@@ -117,7 +119,20 @@ import { JiraAuthService } from '../../../../../core/auth/jira-auth.service';
 export class DynamicLayoutComponent {
   layoutService = inject(LayoutService);
   jiraAuth      = inject(JiraAuthService);
+  authService   = inject(AuthService);
   private route = inject(ActivatedRoute);
+
+  /**
+   * Role label dùng làm fallback khi jiraAuth.user() = null.
+   * Lấy selectedRole từ AuthService (ví dụ: 'FE', 'BE', 'QC', 'BA')
+   * hoặc module id từ route.
+   */
+  roleFallbackLabel(): string {
+    return (
+      this.authService.selectedRole()
+      ?? this.currentModuleId.toUpperCase()
+    );
+  }
 
   /**
    * Resolve module id từ route data (moduleId) hoặc từ URL segment.
