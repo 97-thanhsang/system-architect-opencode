@@ -1,0 +1,226 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  // Project metadata
+  "instructions": [],
+  // Permissions for various capabilities
+  "permission": {
+    "codesearch": "allow",
+    "question": "allow",
+    "task": "allow",
+    "todoread": "allow",
+    "todowrite": "allow",
+    "webfetch": "allow",
+    "websearch": "allow",
+    "bash": {
+      "*": "allow",
+      // Allow common git and npm commands
+      "git *": "allow",
+      "git commit *": "ask",
+      "git push *": "ask",
+
+      "npm *": "allow",
+      "rm *": "ask",
+      "grep *": "allow"
+    },
+    "edit": {
+      "*": "ask"
+    },
+    "write": {
+      "*": "ask"
+    },
+    "read": {
+      "*": "allow"
+    },
+    "grep": {
+      "*": "allow"
+    },
+    "glob": {
+      "*": "allow"
+    },
+    "list": {
+      "*": "allow"
+    },
+    "lsp": {
+      "*": "allow"
+    },
+    "patch": {
+      "*": "allow"
+    },
+    "skill": {
+      "*": "ask"
+    }
+  },
+  // Plugins to load
+  "plugin": [
+    "@franlol/opencode-md-table-formatter@0.0.3",
+    "opencode-antigravity-auth@latest"
+  ],
+  // MCP configurations
+  "mcp": {
+    "jira-server": {
+      "type": "local",
+      "command": [
+        "node",
+        "C:/Users/My PC/.config/opencode/.mcp/jira-server/dist/index.js"
+      ],
+      "environment": {
+        "JIRA_URL": "https://task.ascvn.com.vn",
+        "JIRA_USERNAME": "SangNT",
+        "JIRA_PASSWORD": "Asc_SangNT2023"
+      },
+      "enabled": true
+    },
+    "context7": {
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {
+        "CONTEXT7_API_KEY": "ctx7sk-ed6e5888-1b8a-40e3-bb5f-24f258ae9ecc"
+      },
+      "enabled": true
+    }
+  },
+  // LLM provider and model configurations
+  "provider": {
+    "google": {
+      "models": {
+        "antigravity-gemini-3-pro": {
+          "name": "Gemini 3 Pro (Antigravity)",
+          "limit": { "context": 1048576, "output": 65535 },
+          "modalities": {
+            "input": ["text", "image", "pdf"],
+            "output": ["text"]
+          },
+          "variants": {
+            "low": { "thinkingLevel": "low" },
+            "high": { "thinkingLevel": "high" }
+          }
+        },
+        "antigravity-gemini-3.1-pro": {
+          "name": "Gemini 3.1 Pro (Antigravity)",
+          "limit": { "context": 1048576, "output": 65535 },
+          "modalities": {
+            "input": ["text", "image", "pdf"],
+            "output": ["text"]
+          },
+          "variants": {
+            "low": { "thinkingLevel": "low" },
+            "high": { "thinkingLevel": "high" }
+          }
+        },
+        "antigravity-gemini-3-flash": {
+          "name": "Gemini 3 Flash (Antigravity)",
+          "limit": { "context": 1048576, "output": 65536 },
+          "modalities": {
+            "input": ["text", "image", "pdf"],
+            "output": ["text"]
+          },
+          "variants": {
+            "minimal": { "thinkingLevel": "minimal" },
+            "low": { "thinkingLevel": "low" },
+            "medium": { "thinkingLevel": "medium" },
+            "high": { "thinkingLevel": "high" }
+          }
+        },
+        "antigravity-claude-sonnet-4-6": {
+          "name": "Claude Sonnet 4.6 (Antigravity)",
+          "limit": { "context": 200000, "output": 64000 },
+          "modalities": {
+            "input": ["text", "image", "pdf"],
+            "output": ["text"]
+          }
+        },
+        "antigravity-claude-opus-4-6-thinking": {
+          "name": "Claude Opus 4.6 Thinking (Antigravity)",
+          "limit": { "context": 200000, "output": 64000 },
+          "modalities": {
+            "input": ["text", "image", "pdf"],
+            "output": ["text"]
+          },
+          "variants": {
+            "low": { "thinkingConfig": { "thinkingBudget": 8192 } },
+            "max": { "thinkingConfig": { "thinkingBudget": 32768 } }
+          }
+        },
+        "gemini-2.5-flash": {
+          "name": "Gemini 2.5 Flash (Gemini CLI)",
+          "limit": { "context": 1048576, "output": 65536 },
+          "modalities": {
+            "input": ["text", "image", "pdf"],
+            "output": ["text"]
+          }
+        },
+        "gemini-2.5-pro": {
+          "name": "Gemini 2.5 Pro (Gemini CLI)",
+          "limit": { "context": 1048576, "output": 65536 },
+          "modalities": {
+            "input": ["text", "image", "pdf"],
+            "output": ["text"]
+          }
+        },
+        "gemini-3-flash-preview": {
+          "name": "Gemini 3 Flash Preview (Gemini CLI)",
+          "limit": { "context": 1048576, "output": 65536 },
+          "modalities": {
+            "input": ["text", "image", "pdf"],
+            "output": ["text"]
+          }
+        },
+        "gemini-3-pro-preview": {
+          "name": "Gemini 3 Pro Preview (Gemini CLI)",
+          "limit": { "context": 1048576, "output": 65535 },
+          "modalities": {
+            "input": ["text", "image", "pdf"],
+            "output": ["text"]
+          }
+        },
+        "gemini-3.1-pro-preview": {
+          "name": "Gemini 3.1 Pro Preview (Gemini CLI)",
+          "limit": { "context": 1048576, "output": 65535 },
+          "modalities": {
+            "input": ["text", "image", "pdf"],
+            "output": ["text"]
+          }
+        },
+        "gemini-3.1-pro-preview-customtools": {
+          "name": "Gemini 3.1 Pro Preview Custom Tools (Gemini CLI)",
+          "limit": { "context": 1048576, "output": 65535 },
+          "modalities": {
+            "input": ["text", "image", "pdf"],
+            "output": ["text"]
+          }
+        }
+      }
+    }
+  },
+
+  // Server configurations
+  "server": {
+    "port": 5678,
+    "hostname": "0.0.0.0",
+    "mdns": true,
+    "cors": ["http://localhost:5173"]
+  },
+
+  // Theme configuration
+  // "theme": "my-theme"
+
+  // Custom theme definition
+  // "formatter": {
+  //   "prettier": {
+  //     "command": ["npx", "prettier", "--write", "$FILE"],
+  //     "environment": {
+  //       "NODE_ENV": "development"
+  //     },
+  //     "extensions": [".js", ".ts", ".jsx", ".tsx"]
+  //   },
+  // }
+
+  // Compaction settings
+  "compaction": {
+    "auto": false,
+    "prune": true
+  },
+
+  // Share configuration
+  "share": "manual"
+}

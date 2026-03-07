@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { publicGuard } from '../../core/guards/public.guard';
 import { LoginTaigaComponent } from './components/login-taiga/login-taiga.component';
 import { AuthCallbackComponent } from './components/auth-callback/auth-callback.component';
 
@@ -10,7 +11,8 @@ export const AUTH_ROUTES: Routes = [
   },
   {
     path: 'login',
-    component: LoginTaigaComponent
+    component: LoginTaigaComponent,
+    canActivate: [publicGuard]
   },
   {
     path: 'callback',

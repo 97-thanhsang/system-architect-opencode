@@ -88,23 +88,48 @@ export class AuthService {
 
   /**
    * Set authentication state
+   * @param user - User data
+   * @param token - JWT token
+   * @param rememberMe - Whether to persist across browser sessions
    */
-  private setAuth(user: User, token: string): void {
+  private setAuth(user: User, token: string, rememberMe: boolean = false): void {
     this._user.set(user);
     this._token.set(token);
     this._isAuthenticated.set(true);
     
-    localStorage.setItem('auth_token', token);
-    localStorage.setItem('auth_user', JSON.stringify(user));
+    // Store based on rememberMe preference
+    if (rememberMe) {
+      localStorage.setItem('auth_token', token);
+      localStorage.setItem('auth_user', JSON.stringify(user));
+      localStorage.setItem('auth_remember_me', 'true');
+      sessionStorage.removeItem('auth_token');
+      sessionStorage.removeItem('auth_user');
+    } else {
+      sessionStorage.setItem('auth_token', token);
+      sessionStorage.setItem('auth_user', JSON.stringify(user));
+      localStorage.setItem('auth_remember_me', 'false');
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('auth_user');
+    }
   }
 
   /**
-   * Load stored auth from localStorage
+   * Load stored auth from storage (localStorage or sessionStorage)
    */
   private loadStoredAuth(): void {
-    const token = localStorage.getItem('auth_token');
-    const userStr = localStorage.getItem('auth_user');
-    const role = localStorage.getItem('selected_role');
+    // Try localStorage first (Remember Me = true)
+    let token = localStorage.getItem('auth_token');
+    let userStr = localStorage.getItem('auth_user');
+    let storageType = 'localStorage';
+
+    // If not in localStorage, check sessionStorage (Remember Me = false)
+    if (!token) {
+      token = sessionStorage.getItem('auth_token');
+      userStr = sessionStorage.getItem('auth_user');
+      storageType = 'sessionStorage';
+    }
+
+    const role = localStorage.getItem('selected_role') || sessionStorage.getItem('selected_role');
 
     if (token && userStr) {
       try {
@@ -115,6 +140,7 @@ export class AuthService {
         if (role) {
           this._selectedRole.set(role);
         }
+        console.log(`[AuthService] Auth restored from ${storageType}`);
       } catch (e) {
         this.logout();
       }
@@ -126,7 +152,9 @@ export class AuthService {
    */
   selectRole(role: string): void {
     this._selectedRole.set(role);
+    // Store in both localStorage and sessionStorage for consistency
     localStorage.setItem('selected_role', role);
+    sessionStorage.setItem('selected_role', role);
     this.router.navigate(['/module', role.toLowerCase()]);
   }
 
@@ -139,10 +167,17 @@ export class AuthService {
     this._isAuthenticated.set(false);
     this._selectedRole.set(null);
     
+    // Clear from localStorage
     localStorage.removeItem('auth_token');
     localStorage.removeItem('auth_user');
     localStorage.removeItem('selected_role');
+    localStorage.removeItem('auth_remember_me');
     localStorage.removeItem('oauth_state');
+    
+    // Clear from sessionStorage
+    sessionStorage.removeItem('auth_token');
+    sessionStorage.removeItem('auth_user');
+    sessionStorage.removeItem('selected_role');
     
     // Also logout from Jira
     this.jiraAuth.logout();

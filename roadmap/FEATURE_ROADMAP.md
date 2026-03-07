@@ -52,6 +52,8 @@ Hệ thống xác thực và phân quyền ngườ dùng với Jira integration.
 - [x] **Session Persistence** - Giữ đăng nhập sau refresh (NEW)
 - [x] **Auto Token Refresh** - Tự động refresh token trước khi hết hạn (NEW)
 - [x] **Logout UI** - Nút đăng xuất trong Header và Sidebar (FIXED)
+- [x] **Public Guard** - Chặn user đã login vào trang login (NEW)
+- [x] **Remember Me** - "Ghi nhớ đăng nhập" với localStorage/sessionStorage (NEW)
 
 #### Integration
 - [x] Kết nối với Jira Server (task.ascvn.com.vn)

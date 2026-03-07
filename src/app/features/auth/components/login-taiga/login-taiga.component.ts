@@ -1,8 +1,9 @@
-import { Component, inject, signal, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, inject, signal, ElementRef, ViewChild, AfterViewInit, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { JiraAuthService } from '../../../../core/auth/jira-auth.service';
+import { TokenStorageService } from '../../../../core/auth/token-storage.service';
 
 @Component({
   selector: 'app-login-taiga',
@@ -931,9 +932,34 @@ import { JiraAuthService } from '../../../../core/auth/jira-auth.service';
     }
   `]
 })
-export class LoginTaigaComponent {
+export class LoginTaigaComponent implements OnInit {
   private jiraAuth = inject(JiraAuthService);
+  private tokenStorage = inject(TokenStorageService);
   private router   = inject(Router);
+
+  /**
+   * Check if user is already authenticated on component initialization
+   * This provides an additional safeguard in case the route guard fails
+   */
+  ngOnInit(): void {
+    console.log('[LoginTaigaComponent] Initializing login page...');
+
+    // Check authentication status from both services
+    const isJiraAuth = this.jiraAuth.isAuthenticated();
+    const isTokenStorageAuth = this.tokenStorage.isAuthenticated();
+
+    console.log('[LoginTaigaComponent] JiraAuthService.isAuthenticated():', isJiraAuth);
+    console.log('[LoginTaigaComponent] TokenStorageService.isAuthenticated():', isTokenStorageAuth);
+
+    // If user is already authenticated, redirect to dashboard
+    if (isJiraAuth || isTokenStorageAuth) {
+      console.log('[LoginTaigaComponent] ⚠️ User is already authenticated, redirecting to /module/fe');
+      this.router.navigate(['/module/fe']);
+      return;
+    }
+
+    console.log('[LoginTaigaComponent] ✅ User not authenticated, showing login form');
+  }
 
   username = '';
   password = '';
@@ -972,7 +998,8 @@ export class LoginTaigaComponent {
       const ok = await this.jiraAuth.login({
         username: this.username.trim(),
         password: this.password,
-        jiraUrl: this.jiraUrl || 'https://task.ascvn.com.vn'
+        jiraUrl: this.jiraUrl || 'https://task.ascvn.com.vn',
+        remember: this.remember
       });
 
       if (ok) {

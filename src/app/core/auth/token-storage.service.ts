@@ -183,15 +183,23 @@ export class TokenStorageService {
   }
 
   /**
-   * Initialize service state from localStorage
+   * Initialize service state from storage (localStorage or sessionStorage)
    * Attempts to restore session from JiraAuthService storage (access_token, user)
    * Also checks sessionStorage for user data
    */
   private initializeFromStorage(): void {
     try {
-      // Try to load from localStorage (used by JiraAuthService for backward compatibility)
-      const token = localStorage.getItem('access_token');
-      const userStr = localStorage.getItem('user');
+      // Try to load from localStorage first (Remember Me = true)
+      let token = localStorage.getItem('access_token');
+      let userStr = localStorage.getItem('user');
+      let storageType = 'localStorage';
+
+      // If not in localStorage, check sessionStorage (Remember Me = false)
+      if (!token) {
+        token = sessionStorage.getItem('access_token');
+        userStr = sessionStorage.getItem('user');
+        storageType = 'sessionStorage';
+      }
 
       if (token && userStr) {
         const user = JSON.parse(userStr) as User;
@@ -213,7 +221,7 @@ export class TokenStorageService {
         // Schedule refresh before expiry (8 hours - 2 min buffer = 7h58m)
         this.scheduleTokenRefresh(8 * 60 * 60 - 120);
 
-        console.log('[TokenStorageService] Session restored from storage');
+        console.log(`[TokenStorageService] Session restored from ${storageType}`);
         return;
       }
 
@@ -235,8 +243,9 @@ export class TokenStorageService {
    * @param accessToken - JWT access token
    * @param expiresIn - Token expiry time in seconds
    * @param user - Optional user data
+   * @param rememberMe - Whether to persist across browser sessions (localStorage vs sessionStorage)
    */
-  storeTokens(accessToken: string, expiresIn: number, user?: User): void {
+  storeTokens(accessToken: string, expiresIn: number, user?: User, rememberMe: boolean = false): void {
     this.ngZone.run(() => {
       // Store in memory only
       this._accessToken$.next(accessToken);
@@ -249,20 +258,29 @@ export class TokenStorageService {
       // Update authentication state
       this._isAuthenticated.set(true);
 
-      // Store user info if provided (in sessionStorage for persistence)
+      // Store user info if provided
       if (user) {
         this._currentUser.set(user);
         try {
-          sessionStorage.setItem('current_user', JSON.stringify(user));
+          // Store user in appropriate storage based on rememberMe
+          if (rememberMe) {
+            localStorage.setItem('current_user', JSON.stringify(user));
+            // Also backup to sessionStorage for redundancy
+            sessionStorage.setItem('current_user', JSON.stringify(user));
+          } else {
+            // Only store in sessionStorage (clears when browser closes)
+            sessionStorage.setItem('current_user', JSON.stringify(user));
+            localStorage.removeItem('current_user');
+          }
         } catch (error) {
-          this.log('Failed to store user in sessionStorage', error);
+          this.log('Failed to store user in storage', error);
         }
       }
 
       // Schedule automatic token refresh
       this.scheduleTokenRefresh(expiresIn);
 
-      this.log('Tokens stored successfully, expires in:', expiresIn, 'seconds');
+      this.log('Tokens stored successfully, expires in:', expiresIn, 'seconds, rememberMe:', rememberMe);
     });
   }
 
@@ -481,11 +499,17 @@ export class TokenStorageService {
       // Clear timer
       this.clearRefreshTimer();
 
-      // Clear session storage
+      // Clear both sessionStorage and localStorage
       try {
         sessionStorage.removeItem('current_user');
+        sessionStorage.removeItem('access_token');
+        sessionStorage.removeItem('user');
+        localStorage.removeItem('current_user');
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('remember_me');
       } catch (error) {
-        this.log('Failed to clear sessionStorage', error);
+        this.log('Failed to clear storage', error);
       }
 
       // Reject any pending requests
@@ -496,7 +520,7 @@ export class TokenStorageService {
         )
       );
 
-      this.log('Tokens cleared');
+      this.log('Tokens cleared from all storage');
     });
   }
 

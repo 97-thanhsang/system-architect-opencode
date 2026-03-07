@@ -5,6 +5,7 @@ export const FE_MODULE_ROUTES: Routes = [
   {
     path: '',
     component: FeModuleComponent,
+    data: { moduleId: 'fe' },
     children: [
       {
         path: '',

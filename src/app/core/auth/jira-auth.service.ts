@@ -21,6 +21,7 @@ export interface LoginCredentials {
   username: string;
   password: string;
   jiraUrl?: string;
+  remember?: boolean;
 }
 
 export interface AuthResponse {
@@ -64,6 +65,10 @@ export class JiraAuthService {
 
     // Use default Jira URL if not provided
     const jiraUrl = credentials.jiraUrl || this.DEFAULT_JIRA_URL;
+    
+    // Store remember preference for session persistence logic
+    const rememberMe = credentials.remember ?? false;
+    console.log('[JiraAuthService] Login with rememberMe:', rememberMe);
 
     try {
       const response = await firstValueFrom(
@@ -74,9 +79,24 @@ export class JiraAuthService {
         })
       );
 
-      // Store token and user in localStorage (backward compatibility)
-      localStorage.setItem('access_token', response.access_token);
-      localStorage.setItem('user', JSON.stringify(response.user));
+      // Store token and user based on remember me preference
+      if (rememberMe) {
+        // Remember Me = true: Use localStorage (persists across browser sessions)
+        localStorage.setItem('access_token', response.access_token);
+        localStorage.setItem('user', JSON.stringify(response.user));
+        localStorage.setItem('remember_me', 'true');
+        sessionStorage.removeItem('access_token');
+        sessionStorage.removeItem('user');
+        console.log('[JiraAuthService] Token stored in localStorage (Remember Me enabled)');
+      } else {
+        // Remember Me = false: Use sessionStorage (clears when browser closes)
+        sessionStorage.setItem('access_token', response.access_token);
+        sessionStorage.setItem('user', JSON.stringify(response.user));
+        localStorage.setItem('remember_me', 'false');
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('user');
+        console.log('[JiraAuthService] Token stored in sessionStorage (Remember Me disabled)');
+      }
 
       // Also store in TokenStorageService for automatic refresh
       // Convert JiraUser to User interface
@@ -87,14 +107,14 @@ export class JiraAuthService {
         avatarUrl: response.user.avatarUrl || undefined,
         roles: response.user.roles
       };
-      this.tokenStorage.storeTokens(response.access_token, 8 * 60 * 60, userForStorage);
+      this.tokenStorage.storeTokens(response.access_token, 8 * 60 * 60, userForStorage, rememberMe);
 
       // Update signals
       this._user.set(response.user);
       this._isAuthenticated.set(true);
 
       this._loading.set(false);
-      console.log('[JiraAuthService] Login successful, tokens stored in both services');
+      console.log('[JiraAuthService] Login successful, tokens stored');
       return true;
     } catch (error: any) {
       this._error.set(error.error?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
@@ -107,9 +127,14 @@ export class JiraAuthService {
    * Logout and clear stored auth from both services
    */
   logout(): void {
-    // Clear from localStorage (backward compatibility)
+    // Clear from localStorage
     localStorage.removeItem('access_token');
     localStorage.removeItem('user');
+    localStorage.removeItem('remember_me');
+
+    // Clear from sessionStorage
+    sessionStorage.removeItem('access_token');
+    sessionStorage.removeItem('user');
 
     // Clear from TokenStorageService
     this.tokenStorage.clearTokens();
@@ -118,32 +143,49 @@ export class JiraAuthService {
     this._isAuthenticated.set(false);
     this._error.set(null);
 
-    console.log('[JiraAuthService] Logout completed, tokens cleared from both services');
+    console.log('[JiraAuthService] Logout completed, tokens cleared from all storage');
     this.router.navigate(['/auth/login']);
   }
 
   /**
    * Get stored JWT token
+   * Checks both localStorage and sessionStorage
    */
   getToken(): string | null {
-    return localStorage.getItem('access_token');
+    // Check localStorage first (Remember Me = true)
+    const tokenFromLocal = localStorage.getItem('access_token');
+    if (tokenFromLocal) {
+      return tokenFromLocal;
+    }
+    
+    // Fallback to sessionStorage (Remember Me = false)
+    return sessionStorage.getItem('access_token');
   }
 
   /**
-   * Load authentication state from localStorage
+   * Load authentication state from storage (localStorage or sessionStorage)
    * Restores user session after page refresh
    */
   private loadStoredAuth(): void {
-    console.log('[JiraAuthService] Initializing auth state from localStorage...');
+    console.log('[JiraAuthService] Initializing auth state from storage...');
 
-    const token = localStorage.getItem('access_token');
-    const userStr = localStorage.getItem('user');
+    // First check localStorage (Remember Me = true)
+    let token = localStorage.getItem('access_token');
+    let userStr = localStorage.getItem('user');
+    let storageType = 'localStorage';
 
-    console.log('[JiraAuthService] Token exists:', !!token);
-    console.log('[JiraAuthService] User data exists:', !!userStr);
+    // If not in localStorage, check sessionStorage (Remember Me = false)
+    if (!token) {
+      token = sessionStorage.getItem('access_token');
+      userStr = sessionStorage.getItem('user');
+      storageType = 'sessionStorage';
+    }
+
+    console.log(`[JiraAuthService] Token exists in ${storageType}:`, !!token);
+    console.log(`[JiraAuthService] User data exists in ${storageType}:`, !!userStr);
 
     if (!token) {
-      console.log('[JiraAuthService] No token found, skipping user restoration');
+      console.log('[JiraAuthService] No token found in any storage, skipping user restoration');
       return;
     }
 
@@ -157,7 +199,7 @@ export class JiraAuthService {
 
       // Validate required fields to ensure data integrity
       if (!this.isValidJiraUser(parsedUser)) {
-        console.error('[JiraAuthService] Invalid user data structure in localStorage');
+        console.error('[JiraAuthService] Invalid user data structure in storage');
         this.logout();
         return;
       }
@@ -166,7 +208,7 @@ export class JiraAuthService {
       this._user.set(parsedUser);
       this._isAuthenticated.set(true);
 
-      console.log('[JiraAuthService] ✅ User state restored successfully:', {
+      console.log('[JiraAuthService] ✅ User state restored successfully from', storageType, ':', {
         id: parsedUser.id,
         email: parsedUser.email,
         displayName: parsedUser.displayName || parsedUser.jiraDisplayName,

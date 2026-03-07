@@ -2,6 +2,7 @@ import { Injectable, signal } from '@angular/core';
 
 export type MenuPosition = 'sidebar' | 'header';
 export type Theme = 'light' | 'dark';
+export type ModuleId = 'fe' | 'be' | 'qc' | 'ba';
 
 export interface LayoutState {
   menuPosition: MenuPosition;
@@ -17,6 +18,41 @@ export interface MenuItem {
   roles: string[];
 }
 
+/** Menu config cho từng module */
+const MODULE_MENUS: Record<ModuleId, MenuItem[]> = {
+  fe: [
+    { id: 'dashboard', label: 'Dashboard',   icon: 'dashboard',        route: 'dashboard', roles: ['FE'] },
+    { id: 'tasks',     label: 'My Tasks',     icon: 'assignment',       route: 'tasks',     roles: ['FE'] },
+    { id: 'projects',  label: 'Projects',     icon: 'folder',           route: 'projects',  roles: ['FE'] },
+    { id: 'team',      label: 'Team',         icon: 'people',           route: 'team',      roles: ['FE'] },
+    { id: 'settings',  label: 'Settings',     icon: 'settings',         route: 'settings',  roles: ['FE'] },
+  ],
+  be: [
+    { id: 'dashboard', label: 'Dashboard',   icon: 'dashboard',        route: 'dashboard', roles: ['BE'] },
+    { id: 'apis',      label: 'APIs',         icon: 'api',              route: 'apis',      roles: ['BE'] },
+    { id: 'database',  label: 'Database',     icon: 'storage',          route: 'database',  roles: ['BE'] },
+    { id: 'services',  label: 'Services',     icon: 'miscellaneous_services', route: 'services', roles: ['BE'] },
+    { id: 'logs',      label: 'Logs',         icon: 'receipt_long',     route: 'logs',      roles: ['BE'] },
+    { id: 'settings',  label: 'Settings',     icon: 'settings',         route: 'settings',  roles: ['BE'] },
+  ],
+  qc: [
+    { id: 'dashboard', label: 'Dashboard',   icon: 'dashboard',        route: 'dashboard', roles: ['QC'] },
+    { id: 'testcases', label: 'Test Cases',   icon: 'fact_check',       route: 'testcases', roles: ['QC'] },
+    { id: 'bugs',      label: 'Bug Reports',  icon: 'bug_report',       route: 'bugs',      roles: ['QC'] },
+    { id: 'testruns',  label: 'Test Runs',    icon: 'play_circle',      route: 'testruns',  roles: ['QC'] },
+    { id: 'reports',   label: 'Reports',      icon: 'bar_chart',        route: 'reports',   roles: ['QC'] },
+    { id: 'settings',  label: 'Settings',     icon: 'settings',         route: 'settings',  roles: ['QC'] },
+  ],
+  ba: [
+    { id: 'dashboard',    label: 'Dashboard',       icon: 'dashboard',     route: 'dashboard',    roles: ['BA'] },
+    { id: 'requirements', label: 'Requirements',    icon: 'list_alt',      route: 'requirements', roles: ['BA'] },
+    { id: 'stories',      label: 'User Stories',    icon: 'auto_stories',  route: 'stories',      roles: ['BA'] },
+    { id: 'diagrams',     label: 'Diagrams',         icon: 'account_tree',  route: 'diagrams',     roles: ['BA'] },
+    { id: 'documents',    label: 'Documents',        icon: 'description',   route: 'documents',    roles: ['BA'] },
+    { id: 'settings',     label: 'Settings',         icon: 'settings',      route: 'settings',     roles: ['BA'] },
+  ],
+};
+
 @Injectable({
   providedIn: 'root'
 })
@@ -30,15 +66,6 @@ export class LayoutService {
   readonly menuPosition = this._menuPosition.asReadonly();
   readonly sidebarCollapsed = this._sidebarCollapsed.asReadonly();
   readonly theme = this._theme.asReadonly();
-
-  // Menu configuration
-  readonly menuItems: MenuItem[] = [
-    { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', route: 'dashboard', roles: ['FE', 'BE', 'QC', 'BA'] },
-    { id: 'tasks', label: 'My Tasks', icon: 'assignment', route: 'tasks', roles: ['FE', 'QC'] },
-    { id: 'projects', label: 'Projects', icon: 'folder', route: 'projects', roles: ['FE', 'BE', 'BA'] },
-    { id: 'team', label: 'Team', icon: 'people', route: 'team', roles: ['FE', 'BE', 'QC', 'BA'] },
-    { id: 'settings', label: 'Settings', icon: 'settings', route: 'settings', roles: ['FE', 'BE', 'QC', 'BA'] }
-  ];
 
   constructor() {
     this.loadStoredPreferences();
@@ -77,10 +104,21 @@ export class LayoutService {
   }
 
   /**
-   * Get menu items for a specific role
+   * Get menu items cho một module cụ thể (FE / BE / QC / BA).
+   * Fallback về FE menu nếu moduleId không hợp lệ.
+   */
+  getMenuItemsForModule(moduleId: string): MenuItem[] {
+    const key = (moduleId || 'fe').toLowerCase() as ModuleId;
+    return MODULE_MENUS[key] ?? MODULE_MENUS['fe'];
+  }
+
+  /**
+   * @deprecated Dùng getMenuItemsForModule() thay thế.
+   * Giữ lại để tránh breaking change với các nơi còn dùng.
    */
   getMenuItemsForRole(role: string): MenuItem[] {
-    return this.menuItems.filter(item => item.roles.includes(role));
+    const key = (role || 'fe').toLowerCase() as ModuleId;
+    return MODULE_MENUS[key] ?? MODULE_MENUS['fe'];
   }
 
   /**

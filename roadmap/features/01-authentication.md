@@ -21,6 +21,8 @@ Feature Authentication cung cấp hệ thống xác thực và phân quyền ng�
 - ✅ **TokenStorageService**: Quản lý token với Angular Signals (NEW)
 - ✅ **Auto Token Refresh**: Tự động refresh token trước khi hết hạn (NEW)
 - ✅ **Logout UI**: Nút đăng xuất trong Header và Sidebar (FIXED)
+- ✅ **Login Page Protection**: Redirect authenticated users away from login page (NEW)
+- ✅ **Remember Me**: "Ghi nhớ đăng nhập" với localStorage/sessionStorage (NEW)
 
 ---
 
@@ -82,7 +84,7 @@ apps/api/src/
     └── register.dto.ts
 ```
 
-### Frontend (7 files)
+### Frontend (8 files)
 
 ```
 src/app/core/
@@ -97,8 +99,9 @@ src/app/core/
 │   ├── error.interceptor.ts
 │   └── logging.interceptor.ts
 └── guards/
-    ├── auth.guard.ts                # Route protection
-    └── role.guard.ts
+    ├── auth.guard.ts                ✅ Route protection (dual check)
+    ├── role.guard.ts
+    └── public.guard.ts              ✅ NEW: Redirect auth users from login
 
 src/app/features/modules/fe-module/components/
 ├── header/header.component.ts       # Logout button in user dropdown
@@ -473,6 +476,158 @@ export const environment = {
 
 ---
 
+## 🔄 Login Page Protection (March 7, 2026 - Hotfix)
+
+### Problem
+Authenticated users could still access the login page at `/auth/login`, causing confusion.
+
+### Solution
+Implemented **Public Guard** to redirect authenticated users away from public pages.
+
+#### 1. Public Guard Created
+**File:** `src/app/core/guards/public.guard.ts`
+
+```typescript
+export const publicGuard: CanActivateFn = (route, state) => {
+  const jiraAuthService = inject(JiraAuthService);
+  const tokenStorage = inject(TokenStorageService);
+  const router = inject(Router);
+
+  // Check if user is already authenticated
+  const isAuthenticated = jiraAuthService.isAuthenticated() || 
+                          tokenStorage.isAuthenticated();
+
+  if (isAuthenticated) {
+    // Redirect to dashboard
+    router.navigate(['/module/fe']);
+    return false;
+  }
+
+  // Allow access to public route
+  return true;
+};
+```
+
+#### 2. Route Configuration Updated
+**File:** `src/app/features/auth/auth.routes.ts`
+
+```typescript
+{
+  path: 'login',
+  component: LoginTaigaComponent,
+  canActivate: [publicGuard]  // ✅ Protect login page
+}
+```
+
+#### 3. Login Component Safeguard
+**File:** `src/app/features/auth/components/login-taiga/login-taiga.component.ts`
+
+Added secondary check in `ngOnInit()` as backup protection.
+
+#### 4. Unit Tests
+**File:** `src/app/core/guards/public.guard.spec.ts`
+
+- ✅ 6 test cases - all passing
+- Tests for both authenticated and unauthenticated scenarios
+- Tests for returnUrl handling
+
+### Result
+| Scenario | Before | After |
+|----------|--------|-------|
+| Authenticated → /auth/login | Shows login form ❌ | Redirects to dashboard ✅ |
+| Unauthenticated → /auth/login | Shows login form ✅ | Shows login form ✅ |
+
+---
+
+## 🔄 Remember Me Implementation (March 7, 2026 - Hotfix)
+
+### Problem
+"Ghi nhớ đăng nhập" (Remember Me) checkbox existed in UI but didn't work. Users were always logged out when closing browser, regardless of checkbox state.
+
+### Root Cause
+- Checkbox value was **never passed** to authentication services
+- All auth data stored in `localStorage` unconditionally
+- No distinction between "remember me" and "session only" storage
+
+### Solution Implemented
+
+#### 1. Login Component Updated
+**File:** `src/app/features/auth/components/login-taiga/login-taiga.component.ts`
+
+```typescript
+const ok = await this.jiraAuth.login({
+  username: this.username.trim(),
+  password: this.password,
+  jiraUrl: this.jiraUrl || 'https://task.ascvn.com.vn',
+  remember: this.remember  // ✅ Now passing remember value
+});
+```
+
+#### 2. JiraAuthService Enhanced
+**File:** `src/app/core/auth/jira-auth.service.ts`
+
+```typescript
+interface LoginCredentials {
+  username: string;
+  password: string;
+  jiraUrl?: string;
+  remember?: boolean;  // ✅ Added remember parameter
+}
+
+// Store based on remember preference
+if (remember) {
+  localStorage.setItem('access_token', response.access_token);
+  localStorage.setItem('user', JSON.stringify(response.user));
+  localStorage.setItem('remember_me', 'true');
+} else {
+  sessionStorage.setItem('access_token', response.access_token);
+  sessionStorage.setItem('user', JSON.stringify(response.user));
+}
+```
+
+#### 3. AuthService Updated
+**File:** `src/app/core/auth/auth.service.ts`
+
+- Added `rememberMe` parameter to `setAuth()`
+- Updated `loadStoredAuth()` to check both storage types
+- Updated `logout()` to clear both storage types
+
+#### 4. TokenStorageService Enhanced
+**File:** `src/app/core/auth/token-storage.service.ts`
+
+```typescript
+storeTokens(
+  accessToken: string, 
+  expiresIn: number, 
+  user?: User,
+  rememberMe: boolean = true  // ✅ Added rememberMe parameter
+): void {
+  if (rememberMe) {
+    // localStorage - persists after browser close
+    localStorage.setItem('access_token', accessToken);
+    localStorage.setItem('user', JSON.stringify(user));
+  } else {
+    // sessionStorage - clears when browser closes
+    sessionStorage.setItem('access_token', accessToken);
+    sessionStorage.setItem('user', JSON.stringify(user));
+  }
+}
+```
+
+### Result
+
+| Remember Me | Storage Type | Persistence |
+|-------------|--------------|-------------|
+| ✅ Checked | `localStorage` | Keeps login after browser close |
+| ❌ Unchecked | `sessionStorage` | Lost when browser closes |
+
+### Testing
+- ✅ Remember Me enabled → Login → Close browser → Reopen → Still logged in
+- ✅ Remember Me disabled → Login → Close browser → Reopen → Requires login
+- ✅ Session persistence (refresh) works for both cases
+
+---
+
 ## 🎯 Next Steps
 
 ### Completed (March 7, 2026) ✅
@@ -480,7 +635,10 @@ export const environment = {
 - [x] Add TokenStorageService with Signals
 - [x] Fix logout button visibility
 - [x] Add auto token refresh scheduling
+- [x] Add Public Guard for login page protection
+- [x] Add "Remember Me" functionality with localStorage/sessionStorage
 - [x] Unit tests for TokenStorageService
+- [x] Unit tests for PublicGuard (6 tests)
 
 ### Immediate (Before Production)
 - [ ] **CRITICAL**: Implement httpOnly cookies for refresh tokens
@@ -494,7 +652,7 @@ export const environment = {
 - [ ] Add E2E tests for complete auth flow
 - [ ] Implement concurrent session limits (max 5 per user)
 - [ ] Add session timeout warnings (5 min before expiry)
-- [ ] Add "Remember Me" functionality
+- [x] **Add "Remember Me" functionality** (COMPLETED - March 7, 2026)
 
 ### Future
 - [ ] OAuth 2.0 / OpenID Connect integration

@@ -13,7 +13,11 @@ import { TuiRootModule } from '@taiga-ui/core';
   ],
   template: `
     <tui-root>
-      <router-outlet />
+      <div class="app-layout">
+        <main class="main-content">
+          <router-outlet />
+        </main>
+      </div>
     </tui-root>
   `,
   styles: [`
@@ -21,6 +25,17 @@ import { TuiRootModule } from '@taiga-ui/core';
       display: block;
       height: 100vh;
       width: 100vw;
+    }
+
+    .app-layout {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    .main-content {
+      flex: 1;
+      overflow: auto;
     }
   `]
 })

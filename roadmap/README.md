@@ -148,6 +148,10 @@ Hoặc
 - ✅ **Added**: Comprehensive unit tests (588 lines) for TokenStorageService
 - ✅ **Added**: User state validation and restoration from localStorage
 - ✅ **Added**: Token refresh interceptor with request queuing
+- ✅ **Added**: Public Guard to prevent authenticated users accessing login page
+- ✅ **Fixed**: Login page redirect when already authenticated
+- ✅ **Added**: "Remember Me" functionality with localStorage/sessionStorage
+- ✅ **Fixed**: Remember Me checkbox now properly persists login across browser sessions
 - ⚠️ **Known Issues**: Security hardening needed before production (httpOnly cookies, CSRF)
 
 ### March 7, 2026 (Initial)

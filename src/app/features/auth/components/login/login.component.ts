@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -14,6 +14,7 @@ import {
   TuiIslandModule
 } from '@taiga-ui/kit';
 import { JiraAuthService } from '../../../../core/auth/jira-auth.service';
+import { TokenStorageService } from '../../../../core/auth/token-storage.service';
 
 @Component({
   selector: 'app-login',
@@ -242,9 +243,10 @@ import { JiraAuthService } from '../../../../core/auth/jira-auth.service';
     }
   `]
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   private fb = inject(FormBuilder);
   private router = inject(Router);
+  private tokenStorage = inject(TokenStorageService);
   
   // Make jiraAuth public so template can access it
   jiraAuth = inject(JiraAuthService);
@@ -257,6 +259,30 @@ export class LoginComponent {
       password: ['', [Validators.required]],
       jiraUrl: ['https://task.ascvn.com.vn']
     });
+  }
+
+  /**
+   * Check if user is already authenticated on component initialization
+   * Redirects to dashboard if already logged in
+   */
+  ngOnInit(): void {
+    console.log('[LoginComponent] Initializing login page...');
+
+    // Check authentication status from both services
+    const isJiraAuth = this.jiraAuth.isAuthenticated();
+    const isTokenStorageAuth = this.tokenStorage.isAuthenticated();
+
+    console.log('[LoginComponent] JiraAuthService.isAuthenticated():', isJiraAuth);
+    console.log('[LoginComponent] TokenStorageService.isAuthenticated():', isTokenStorageAuth);
+
+    // If user is already authenticated, redirect to dashboard
+    if (isJiraAuth || isTokenStorageAuth) {
+      console.log('[LoginComponent] ⚠️ User is already authenticated, redirecting to /module/fe');
+      this.router.navigate(['/module/fe']);
+      return;
+    }
+
+    console.log('[LoginComponent] ✅ User not authenticated, showing login form');
   }
 
   onSubmit(): void {

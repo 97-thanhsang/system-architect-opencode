@@ -1,0 +1,522 @@
+/**
+ * Sidebar Component Styles
+ * Responsive role-based navigation with mobile/desktop support
+ */
+
+// ============================================
+// Variables
+// ============================================
+$sidebar-width: 280px;
+$sidebar-collapsed-width: 72px;
+$sidebar-header-height: 140px;
+$sidebar-footer-height: 80px;
+$mobile-breakpoint: 768px;
+$transition-duration: 300ms;
+$primary-color: #3f51b5;
+$accent-color: #ff4081;
+$warn-color: #f44336;
+
+// ============================================
+// Container
+// ============================================
+.sidenav-container {
+  height: 100vh;
+  width: 100%;
+}
+
+// ============================================
+// Sidebar Navigation
+// ============================================
+.sidenav {
+  background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);
+  transition: width $transition-duration cubic-bezier(0.4, 0, 0.2, 1);
+
+  // Material overrides
+  ::ng-deep {
+    .mat-sidenav-inner-container {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .mat-drawer-inner-container {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+  }
+}
+
+// ============================================
+// Sidebar Header
+// ============================================
+.sidenav-header {
+  padding: 20px 16px;
+  background: linear-gradient(135deg, $primary-color 0%, #5c6bc0 100%);
+  color: white;
+  flex-shrink: 0;
+}
+
+.sidenav-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  &__icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+    color: white;
+  }
+
+  &__text {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    white-space: nowrap;
+  }
+}
+
+// Role Selector
+.sidenav-role {
+  &__field {
+    width: 100%;
+
+    ::ng-deep {
+      .mat-mdc-form-field-subscript-wrapper {
+        display: none;
+      }
+
+      .mat-mdc-text-field-wrapper {
+        background-color: rgba(255, 255, 255, 0.15);
+        border-radius: 8px;
+      }
+
+      .mat-mdc-form-field-flex {
+        height: 44px;
+      }
+
+      .mat-mdc-floating-label {
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      .mat-mdc-select-value {
+        color: white;
+      }
+
+      .mat-mdc-select-arrow {
+        color: rgba(255, 255, 255, 0.7);
+      }
+    }
+  }
+
+  &__button {
+    width: 40px;
+    height: 40px;
+    margin: 0 auto;
+    display: block;
+    color: white;
+
+    mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+    }
+  }
+}
+
+.role-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: rgba(0, 0, 0, 0.54);
+  }
+}
+
+// ============================================
+// Sidebar Content (Menu Items)
+// ============================================
+.sidenav-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px 0;
+
+  // Custom scrollbar
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 2px;
+  }
+}
+
+.sidenav-menu {
+  padding: 0;
+}
+
+.sidenav-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: rgba(0, 0, 0, 0.38);
+  text-align: center;
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+  }
+
+  p {
+    font-size: 14px;
+    margin: 0;
+  }
+}
+
+// ============================================
+// Sidebar Footer
+// ============================================
+.sidenav-footer {
+  flex-shrink: 0;
+  background: white;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+
+  &__content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    min-height: 64px;
+  }
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.user-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, $primary-color 0%, $accent-color 100%);
+
+  mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    color: white;
+  }
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  .user-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.87);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .user-role {
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.54);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.collapse-toggle {
+  color: rgba(0, 0, 0, 0.54);
+  transition: transform $transition-duration ease;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+}
+
+// ============================================
+// Main Content Area
+// ============================================
+.sidenav-content-wrapper {
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.main-content {
+  padding: 24px;
+  min-height: calc(100vh - 64px);
+
+  @media (max-width: $mobile-breakpoint) {
+    padding: 16px;
+  }
+}
+
+// ============================================
+// Mobile Header
+// ============================================
+.mobile-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  height: 56px;
+
+  &__title {
+    font-size: 18px;
+    font-weight: 500;
+    margin-left: 8px;
+  }
+}
+
+// ============================================
+// Collapsed State Styles
+// ============================================
+.sidenav {
+  &[style*="72px"] {
+    .sidenav-header {
+      padding: 16px 8px;
+      text-align: center;
+    }
+
+    .sidenav-brand {
+      justify-content: center;
+      margin-bottom: 8px;
+
+      &__text {
+        display: none;
+      }
+    }
+
+    .sidenav-content {
+      padding: 8px 4px;
+    }
+
+    .sidenav-footer {
+      &__content {
+        justify-content: center;
+        padding: 8px;
+      }
+    }
+
+    ::ng-deep {
+      .mat-mdc-list-item {
+        padding: 0 8px;
+        justify-content: center;
+      }
+
+      .mdc-list-item__content {
+        display: none;
+      }
+
+      .mat-icon {
+        margin: 0;
+      }
+    }
+  }
+}
+
+// ============================================
+// Responsive Styles
+// ============================================
+@media (max-width: $mobile-breakpoint) {
+  .sidenav {
+    width: 280px !important;
+    max-width: 85vw;
+  }
+
+  .sidenav-header {
+    padding: 16px;
+  }
+
+  .sidenav-brand {
+    &__text {
+      font-size: 18px;
+    }
+  }
+
+  .main-content {
+    padding: 16px;
+  }
+}
+
+// ============================================
+// Animation
+// ============================================
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.menu-item-wrapper {
+  animation: slideIn 200ms ease-out;
+}
+
+// ============================================
+// Material Design Overrides
+// ============================================
+::ng-deep {
+  // Menu list items
+  .mat-mdc-nav-list {
+    padding: 0;
+  }
+
+  .mat-mdc-list-item {
+    border-radius: 8px !important;
+    margin: 2px 8px !important;
+    height: 44px !important;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.04) !important;
+    }
+
+    &.menu-item--active {
+      background-color: rgba(63, 81, 181, 0.12) !important;
+
+      .mat-icon {
+        color: $primary-color;
+      }
+
+      .mdc-list-item__primary-text {
+        color: $primary-color;
+        font-weight: 500;
+      }
+    }
+  }
+
+  // Dividers
+  .mat-divider {
+    margin: 8px 0;
+    border-color: rgba(0, 0, 0, 0.06);
+  }
+
+  // Tooltips
+  .mat-mdc-tooltip {
+    font-size: 12px;
+  }
+
+  // Select dropdown
+  .mat-mdc-select-panel {
+    .mat-mdc-option {
+      min-height: 44px;
+
+      .mdc-list-item__primary-text {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+    }
+  }
+}
+
+// ============================================
+// Dark Theme Support (Optional)
+// ============================================
+@media (prefers-color-scheme: dark) {
+  .sidenav {
+    background: linear-gradient(180deg, #1e1e1e 0%, #252525 100%);
+    border-right-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .sidenav-footer {
+    background: #1e1e1e;
+    border-top-color: rgba(255, 255, 255, 0.06);
+
+    .user-info {
+      .user-name {
+        color: rgba(255, 255, 255, 0.87);
+      }
+
+      .user-role {
+        color: rgba(255, 255, 255, 0.54);
+      }
+    }
+  }
+
+  .sidenav-empty {
+    color: rgba(255, 255, 255, 0.38);
+  }
+
+  .sidenav-content-wrapper {
+    background-color: #121212;
+  }
+
+  .mobile-header {
+    background: #1e1e1e;
+    color: white;
+  }
+
+  ::ng-deep {
+    .mat-mdc-list-item {
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.05) !important;
+      }
+
+      .mdc-list-item__primary-text {
+        color: rgba(255, 255, 255, 0.87);
+      }
+
+      .mat-icon {
+        color: rgba(255, 255, 255, 0.54);
+      }
+    }
+
+    .mat-divider {
+      border-color: rgba(255, 255, 255, 0.06);
+    }
+  }
+}
+
+// ============================================
+// Print Styles
+// ============================================
+@media print {
+  .sidenav {
+    display: none;
+  }
+
+  .mobile-header {
+    display: none;
+  }
+
+  .sidenav-content-wrapper {
+    margin-left: 0 !important;
+  }
+}

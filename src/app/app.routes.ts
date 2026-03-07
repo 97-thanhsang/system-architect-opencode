@@ -16,49 +16,53 @@ export const routes: Routes = [
   {
     path: 'dashboard',
     canActivate: [authGuard],
-    loadComponent: () => import('./features/dashboard/dashboard.component').then(c => c.DashboardComponent),
-    data: { 
+    loadComponent: () => import('./features/dashboard/professional-dashboard.component').then(c => c.ProfessionalDashboardComponent),
+    data: {
       title: 'Dashboard',
       breadcrumb: 'Home'
     }
   },
   {
     path: 'module/fe',
-    canActivate: [authGuard, roleGuard(['FE', 'BE'])], // ✅ Role guard
+    canActivate: [authGuard, roleGuard(['FE', 'BE'])],
     loadChildren: () => import('./features/modules/fe-module/fe-module.routes').then(m => m.FE_MODULE_ROUTES),
-    data: { 
+    data: {
       title: 'Frontend Module',
       breadcrumb: 'Frontend',
+      moduleId: 'fe',
       requiredRoles: ['FE', 'BE']
     }
   },
   {
     path: 'module/be',
     canActivate: [authGuard, roleGuard(['BE'])],
-    loadComponent: () => import('./features/modules/fe-module/fe-module.component').then(c => c.FeModuleComponent),
-    data: { 
+    loadChildren: () => import('./features/modules/be-module/be-module.routes').then(m => m.BE_MODULE_ROUTES),
+    data: {
       title: 'Backend Module',
       breadcrumb: 'Backend',
+      moduleId: 'be',
       requiredRoles: ['BE']
     }
   },
   {
     path: 'module/qc',
     canActivate: [authGuard, roleGuard(['QC', 'FE'])],
-    loadComponent: () => import('./features/modules/fe-module/fe-module.component').then(c => c.FeModuleComponent),
-    data: { 
+    loadChildren: () => import('./features/modules/qc-module/qc-module.routes').then(m => m.QC_MODULE_ROUTES),
+    data: {
       title: 'Quality Control Module',
       breadcrumb: 'QC',
+      moduleId: 'qc',
       requiredRoles: ['QC', 'FE']
     }
   },
   {
     path: 'module/ba',
     canActivate: [authGuard, roleGuard(['BA', 'FE', 'BE'])],
-    loadComponent: () => import('./features/modules/fe-module/fe-module.component').then(c => c.FeModuleComponent),
-    data: { 
+    loadChildren: () => import('./features/modules/ba-module/ba-module.routes').then(m => m.BA_MODULE_ROUTES),
+    data: {
       title: 'Business Analyst Module',
       breadcrumb: 'BA',
+      moduleId: 'ba',
       requiredRoles: ['BA', 'FE', 'BE']
     }
   },
@@ -66,7 +70,7 @@ export const routes: Routes = [
     path: 'profile',
     canActivate: [authGuard],
     loadComponent: () => import('./features/profile/profile.component').then(c => c.ProfileComponent),
-    data: { 
+    data: {
       title: 'User Profile',
       breadcrumb: 'Profile'
     }

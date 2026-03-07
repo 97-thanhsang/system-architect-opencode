@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet } from '@angular/router';
+import { RouterOutlet, ActivatedRoute } from '@angular/router';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { HeaderComponent } from '../header/header.component';
 import { LayoutService } from '../../services/layout.service';
@@ -117,10 +117,32 @@ import { JiraAuthService } from '../../../../../core/auth/jira-auth.service';
 export class DynamicLayoutComponent {
   layoutService = inject(LayoutService);
   jiraAuth      = inject(JiraAuthService);
+  private route = inject(ActivatedRoute);
 
-  menuItems = () => {
-    const username = this.jiraAuth.user()?.username;
-    const role = username || 'fe';
-    return this.layoutService.getMenuItemsForRole(role);
-  };
+  /**
+   * Resolve module id từ route data (moduleId) hoặc từ URL segment.
+   * Ví dụ: /module/be → 'be', /module/fe → 'fe'
+   */
+  private get currentModuleId(): string {
+    // Thử lấy từ route data trước (được set trong app.routes.ts)
+    const fromData = this.route.snapshot.data?.['moduleId']
+      ?? this.route.snapshot.parent?.data?.['moduleId'];
+
+    if (fromData) return fromData as string;
+
+    // Fallback: lấy từ URL (path segment thứ 2 của /module/XX)
+    const url = this.route.snapshot.pathFromRoot
+      .flatMap(r => r.url)
+      .map(s => s.path);
+
+    const moduleIdx = url.indexOf('module');
+    if (moduleIdx !== -1 && url[moduleIdx + 1]) {
+      return url[moduleIdx + 1];
+    }
+
+    // Cuối cùng fallback về role của user
+    return this.jiraAuth.user()?.username?.toLowerCase() ?? 'fe';
+  }
+
+  menuItems = () => this.layoutService.getMenuItemsForModule(this.currentModuleId);
 }
