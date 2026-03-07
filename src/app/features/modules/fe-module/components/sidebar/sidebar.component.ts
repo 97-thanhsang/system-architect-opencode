@@ -18,14 +18,14 @@ export interface SidebarUser {
     <aside class="sidebar" [class.sidebar--collapsed]="collapsed()">
 
       <!-- Logo ─────────────────────────────────────── -->
-      <div class="sidebar__logo">
+      <a routerLink="/dashboard" class="sidebar__logo" title="Về trang chọn Module (Dashboard)">
         <div class="sidebar__logo-icon">
           <span class="material-icons-outlined" style="font-size:24px;color:#1a73e8">architecture</span>
         </div>
         @if (!collapsed()) {
           <span class="sidebar__logo-text">System Architect</span>
         }
-      </div>
+      </a>
 
       <div class="sidebar__divider"></div>
 
@@ -142,6 +142,12 @@ export interface SidebarUser {
       padding: 0 20px;
       flex-shrink: 0;
       overflow: hidden; /* ẩn logo-text khi sidebar thu nhỏ */
+      text-decoration: none;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .sidebar__logo:hover {
+      background: #f1f3f4;
     }
 
     .sidebar__logo-icon {

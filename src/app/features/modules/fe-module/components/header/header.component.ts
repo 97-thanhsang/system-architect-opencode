@@ -2,7 +2,13 @@ import { Component, input, output, signal, HostListener, ElementRef } from '@ang
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import type { MenuPosition, MenuItem } from '../../services/layout.service';
-import type { JiraUser } from '../../../../../core/auth/jira-auth.service';
+
+/** Header-local user shape — always non-null, always has displayName */
+export interface HeaderUser {
+  displayName: string;
+  email: string;
+  role?: string;
+}
 
 @Component({
   selector: 'app-header',
@@ -22,14 +28,14 @@ import type { JiraUser } from '../../../../../core/auth/jira-auth.service';
 
         <!-- Logo (sidebar mode — secondary branding) -->
         @if (menuPosition() === 'sidebar') {
-          <div class="header__brand">
+          <a routerLink="/dashboard" class="header__brand" title="Trở về Trang chủ">
             <span class="header__brand-text">System Architect</span>
-          </div>
+          </a>
         }
 
         <!-- Full logo + nav (header mode) -->
         @if (menuPosition() === 'header') {
-          <a routerLink="/" class="header__logo">
+          <a routerLink="/dashboard" class="header__logo" title="Trở về Trang chủ">
             <div class="header__logo-icon">
               <span class="material-icons-outlined" style="font-size:22px;color:#1a73e8">architecture</span>
             </div>
@@ -87,51 +93,53 @@ import type { JiraUser } from '../../../../../core/auth/jira-auth.service';
         </button>
 
         <!-- User avatar + dropdown -->
-        @if (user(); as u) {
-          <div class="header__user-wrap" (clickOutside)="userMenu.set(false)">
-            <button
-              class="header__avatar-btn"
-              (click)="userMenu.set(!userMenu())"
-              [class.header__avatar-btn--open]="userMenu()">
-              <div class="g-avatar g-avatar--sm" [style.background]="avatarColor(u.displayName)">
-                {{ initials(u.displayName) }}
-              </div>
-            </button>
+        <div class="header__user-wrap" (clickOutside)="userMenu.set(false)">
+          <button
+            class="header__avatar-btn"
+            (click)="userMenu.set(!userMenu())"
+            [class.header__avatar-btn--open]="userMenu()">
+            <div class="g-avatar g-avatar--sm" [style.background]="avatarColor(headerUser().displayName)">
+              {{ initials(headerUser().displayName) }}
+            </div>
+          </button>
 
-            @if (userMenu()) {
-              <div class="header__dropdown">
-                <!-- User info header -->
-                <div class="header__dropdown-user">
-                  <div class="g-avatar g-avatar--lg" [style.background]="avatarColor(u.displayName)">
-                    {{ initials(u.displayName) }}
-                  </div>
-                  <div class="header__dropdown-info">
-                    <span class="header__dropdown-name">{{ u.displayName }}</span>
-                    <span class="header__dropdown-email">{{ u.email }}</span>
-                  </div>
+          @if (userMenu()) {
+            <div class="header__dropdown">
+              <!-- User info header -->
+              <div class="header__dropdown-user">
+                <div class="g-avatar g-avatar--lg" [style.background]="avatarColor(headerUser().displayName)">
+                  {{ initials(headerUser().displayName) }}
                 </div>
-
-                <div class="header__dropdown-divider"></div>
-
-                <a routerLink="/app/profile" class="header__dropdown-item" (click)="userMenu.set(false)">
-                  <span class="material-icons-outlined">manage_accounts</span>
-                  <span>Quản lý tài khoản</span>
-                </a>
-                <button class="header__dropdown-item" (click)="userMenu.set(false); toggleMenuPosition.emit()">
-                  <span class="material-icons-outlined">view_sidebar</span>
-                  <span>Đổi layout</span>
-                </button>
-
-                <div class="header__dropdown-divider"></div>
-
-                <button class="header__dropdown-item header__dropdown-item--danger" (click)="logout.emit()">
-                  <span class="material-icons-outlined">logout</span>
-                  <span>Đăng xuất</span>
-                </button>
+                <div class="header__dropdown-info">
+                  <span class="header__dropdown-name">{{ headerUser().displayName }}</span>
+                  <span class="header__dropdown-email">{{ headerUser().email }}</span>
+                </div>
               </div>
-            }
-          </div>
-        }
+
+              <div class="header__dropdown-divider"></div>
+
+              <a routerLink="/dashboard" class="header__dropdown-item" (click)="userMenu.set(false)">
+                <span class="material-icons-outlined">apps</span>
+                <span>Chuyển Module (Về Trang Chủ)</span>
+              </a>
+              <a routerLink="/app/profile" class="header__dropdown-item" (click)="userMenu.set(false)">
+                <span class="material-icons-outlined">manage_accounts</span>
+                <span>Quản lý tài khoản</span>
+              </a>
+              <button class="header__dropdown-item" (click)="userMenu.set(false); toggleMenuPosition.emit()">
+                <span class="material-icons-outlined">view_sidebar</span>
+                <span>Đổi layout</span>
+              </button>
+
+              <div class="header__dropdown-divider"></div>
+
+              <button class="header__dropdown-item header__dropdown-item--danger" (click)="logout.emit()">
+                <span class="material-icons-outlined">logout</span>
+                <span>Đăng xuất</span>
+              </button>
+            </div>
+          }
+        </div>
       </div>
     </header>
   `,
@@ -161,6 +169,11 @@ import type { JiraUser } from '../../../../../core/auth/jira-auth.service';
 
     .header__brand {
       padding-left: 4px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .header__brand:hover .header__brand-text {
+      color: #1a73e8;
     }
 
     .header__brand-text {
@@ -169,6 +182,7 @@ import type { JiraUser } from '../../../../../core/auth/jira-auth.service';
       font-weight: 400;
       color: #5f6368;
       white-space: nowrap;
+      transition: color .15s;
     }
 
     .header__logo {
@@ -428,7 +442,10 @@ import type { JiraUser } from '../../../../../core/auth/jira-auth.service';
 export class HeaderComponent {
   menuPosition = input<MenuPosition>('sidebar');
   menuItems    = input<MenuItem[]>([]);
-  user         = input<JiraUser | null>(null);
+  /** Raw user từ JiraAuthService — có thể null khi chưa login hoặc không có backend */
+  user         = input<{ displayName?: string; jiraDisplayName?: string; name?: string; username?: string; email?: string } | null>(null);
+  /** Fallback role label khi không có user thật */
+  roleLabel    = input<string>('');
 
   toggleMenuPosition = output<void>();
   logout             = output<void>();
@@ -436,12 +453,46 @@ export class HeaderComponent {
   userMenu    = signal(false);
   searchFocus = false;
 
-  initials(name: string): string {
-    return name.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase();
+  /**
+   * Resolve a safe HeaderUser từ raw user input.
+   * Luôn trả về object có displayName và email — không bao giờ null/undefined.
+   */
+  headerUser(): HeaderUser {
+    const u = this.user();
+    if (u) {
+      const displayName = u.displayName || u.jiraDisplayName || u.name || u.username || 'User';
+      const email = u.email || '';
+      return { displayName, email };
+    }
+    // Fallback khi không có user: dùng role label
+    const role = this.roleLabel() || 'Guest';
+    return {
+      displayName: role,
+      email: `${role.toLowerCase()}@system`,
+      role,
+    };
   }
 
+  /**
+   * Tạo initials từ displayName — safe khi chuỗi rỗng hoặc 1 từ.
+   * "Nguyen Van A" → "NA", "FE" → "FE", "" → "?"
+   */
+  initials(name: string): string {
+    if (!name || !name.trim()) return '?';
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 1) {
+      return parts[0].slice(0, 2).toUpperCase();
+    }
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+
+  /**
+   * Chọn màu avatar ổn định dựa trên charCode của ký tự đầu.
+   * Safe khi name rỗng — fallback về màu đầu tiên.
+   */
   avatarColor(name: string): string {
-    const colors = ['#1a73e8','#34a853','#ea4335','#f9ab00','#9334e6','#0f9d58'];
+    const colors = ['#1a73e8', '#34a853', '#ea4335', '#f9ab00', '#9334e6', '#0f9d58'];
+    if (!name || name.length === 0) return colors[0];
     return colors[name.charCodeAt(0) % colors.length];
   }
 

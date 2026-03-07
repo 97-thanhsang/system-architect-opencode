@@ -36,6 +36,7 @@ import { AuthService } from '../../../../../core/auth/auth.service';
           [menuPosition]="layoutService.menuPosition()"
           [menuItems]="menuItems()"
           [user]="jiraAuth.user()"
+          [roleLabel]="roleFallbackLabel()"
           (toggleMenuPosition)="layoutService.toggleMenuPosition()"
           (logout)="jiraAuth.logout()" />
 
