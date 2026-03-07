@@ -1,5 +1,5 @@
-import { Directive, Input, TemplateRef, ViewContainerRef, inject } from '@angular/core';
-import { AuthService } from '../core/auth/auth.service';
+import { Directive, Input, TemplateRef, ViewContainerRef, inject, ElementRef, HostListener } from '@angular/core';
+import { AuthService } from '../../core/auth/auth.service';
 
 /**
  * Structural Directive to check user permissions
@@ -19,7 +19,7 @@ export class HasPermissionDirective {
 
   @Input() set appHasPermission(permissions: string | string[]) {
     const requiredPermissions = Array.isArray(permissions) ? permissions : [permissions];
-    const userRole = this.authService.selectedRole();
+    const userRole = this.authService.selectedRole() as string;
     
     const hasPermission = userRole ? requiredPermissions.includes(userRole) : false;
 
@@ -79,5 +79,3 @@ export class HighlightDirective {
     this.el.nativeElement.style.transition = 'all 0.3s ease';
   }
 }
-
-import { ElementRef, HostListener } from '@angular/core';

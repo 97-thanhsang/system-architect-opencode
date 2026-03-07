@@ -292,7 +292,7 @@ export class LoginComponent implements OnInit {
 
     const credentials = this.loginForm.value;
     
-    this.jiraAuth.login(credentials).subscribe(success => {
+    this.jiraAuth.login(credentials).then(success => {
       if (success) {
         this.router.navigate(['/dashboard']);
       }

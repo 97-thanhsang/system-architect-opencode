@@ -44,14 +44,25 @@ export interface HeaderUser {
 
           <nav class="header__nav">
             @for (item of menuItems(); track item.id) {
-              <a
-                class="header__nav-item"
-                [routerLink]="item.route"
-                routerLinkActive="header__nav-item--active"
-                [routerLinkActiveOptions]="{ exact: false }">
-                <span class="material-icons-outlined header__nav-icon">{{ item.icon }}</span>
-                <span>{{ item.label }}</span>
-              </a>
+              @if (item.route) {
+                <a
+                  class="header__nav-item"
+                  [routerLink]="item.route"
+                  routerLinkActive="header__nav-item--active"
+                  [routerLinkActiveOptions]="{ exact: false }">
+                  <span class="material-icons-outlined header__nav-icon">{{ item.icon }}</span>
+                  <span>{{ item.label }}</span>
+                </a>
+              } @else if (item.children && item.children.length > 0) {
+                <!-- Optional: Show dropdown for groups in header mode -->
+                <div class="header__nav-group">
+                   <button class="header__nav-item">
+                     <span class="material-icons-outlined header__nav-icon">{{ item.icon }}</span>
+                     <span>{{ item.label }}</span>
+                     <span class="material-icons-outlined" style="font-size:16px">expand_more</span>
+                   </button>
+                </div>
+              }
             }
           </nav>
         }
@@ -232,9 +243,17 @@ export interface HeaderUser {
       text-decoration: none;
       transition: background .15s, color .15s;
       white-space: nowrap;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
 
       &:hover { background: #f1f3f4; color: #202124; text-decoration: none; }
       &--active { background: #e8f0fe; color: #1a73e8; }
+    }
+
+    .header__nav-group {
+      position: relative;
     }
 
     .header__nav-icon {

@@ -17,6 +17,10 @@ export const FE_MODULE_ROUTES: Routes = [
         loadComponent: () => import('./pages/fe-dashboard/fe-dashboard.component').then(c => c.FeDashboardComponent)
       },
       {
+        path: 'analyze',
+        loadChildren: () => import('./analyze/analyze.routes').then(m => m.ANALYZE_ROUTES)
+      },
+      {
         path: 'tasks',
         loadComponent: () => import('./pages/fe-tasks/fe-tasks.component').then(c => c.FeTasksComponent)
       },

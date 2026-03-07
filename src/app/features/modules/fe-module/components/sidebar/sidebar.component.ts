@@ -1,6 +1,6 @@
-import { Component, input, output } from '@angular/core';
+import { Component, input, output, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import type { MenuItem } from '../../services/layout.service';
 
 /** Sidebar-local user shape — always non-null, always has displayName */
@@ -32,19 +32,67 @@ export interface SidebarUser {
       <!-- Navigation ──────────────────────────────── -->
       <nav class="sidebar__nav">
         @for (item of menuItems(); track item.id) {
+          <ng-container *ngTemplateOutlet="menuItemTmpl; context: { item: item, depth: 0 }"></ng-container>
+        }
+      </nav>
+
+      <!-- Recursive Menu Template -->
+      <ng-template #menuItemTmpl let-item="item" let-depth="depth">
+        @if (item.children && item.children.length > 0) {
+          <!-- Parent Item -->
+          <div class="sidebar__group" 
+               [class.sidebar__group--open]="isGroupOpen(item.id)"
+               [class.sidebar__group--active]="isItemActive(item)">
+            <button
+              class="sidebar__item sidebar__item--parent"
+              [style.padding-left.px]="20 + (depth * 12)"
+              (click)="toggleGroup(item.id)"
+              [title]="collapsed() ? item.label : ''">
+              @if (item.icon) {
+                <span class="material-icons-outlined sidebar__item-icon" [class.active]="isItemActive(item)">{{ item.icon }}</span>
+              } @else {
+                <span class="sidebar__item-dot" [style.margin-left.px]="collapsed() ? 0 : 8" [class.active]="isItemActive(item)"></span>
+              }
+
+              @if (!collapsed()) {
+                <span class="sidebar__item-label" [class.active]="isItemActive(item)">{{ item.label }}</span>
+                <span class="material-icons-outlined sidebar__item-arrow">
+                  {{ isGroupOpen(item.id) ? 'expand_more' : 'chevron_right' }}
+                </span>
+              }
+            </button>
+
+            <!-- Children -->
+            @if (isGroupOpen(item.id) && !collapsed()) {
+              <div class="sidebar__children">
+                @for (child of item.children; track child.id) {
+                  <ng-container *ngTemplateOutlet="menuItemTmpl; context: { item: child, depth: depth + 1 }"></ng-container>
+                }
+              </div>
+            }
+          </div>
+        } @else {
+          <!-- Leaf Item -->
           <a
             class="sidebar__item"
             [routerLink]="item.route"
             routerLinkActive="sidebar__item--active"
             [routerLinkActiveOptions]="{ exact: false }"
+            [style.padding-left.px]="20 + (depth * 12)"
             [title]="collapsed() ? item.label : ''">
-            <span class="material-icons-outlined sidebar__item-icon">{{ item.icon }}</span>
+            @if (item.icon) {
+              <span class="material-icons-outlined sidebar__item-icon">{{ item.icon }}</span>
+            } @else {
+              <span class="sidebar__item-dot" [style.margin-left.px]="collapsed() ? 0 : 8"></span>
+            }
+
             @if (!collapsed()) {
               <span class="sidebar__item-label">{{ item.label }}</span>
             }
           </a>
         }
-      </nav>
+      </ng-template>
+
 
       <div class="sidebar__spacer"></div>
       <div class="sidebar__divider"></div>
@@ -190,18 +238,21 @@ export interface SidebarUser {
       display: flex;
       align-items: center;
       gap: 16px;
-      height: 44px;
+      height: 40px;
       padding: 0 20px;
       margin: 1px 8px;
-      border-radius: 0 22px 22px 0;
+      border-radius: 4px;
       color: #444746;
       text-decoration: none;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 500;
       transition: background .15s ease, color .15s ease;
       white-space: nowrap;
       cursor: pointer;
-      border-left: 3px solid transparent;
+      border: none;
+      background: transparent;
+      width: calc(100% - 16px);
+      text-align: left;
 
       &:hover:not(.sidebar__item--active) {
         background: #f1f3f4;
@@ -212,12 +263,28 @@ export interface SidebarUser {
       &--active {
         background: #e8f0fe;
         color: #1a73e8;
-        border-left-color: #1a73e8;
 
-        .sidebar__item-icon {
+        .sidebar__item-icon, .sidebar__item-label {
           color: #1a73e8;
         }
+        .sidebar__item-dot {
+          background: #1a73e8;
+        }
       }
+
+      &--parent {
+        display: flex;
+        justify-content: flex-start;
+      }
+
+      &--parent.sidebar__item--active {
+         background: transparent;
+      }
+    }
+
+    .sidebar__group--active > .sidebar__item--parent {
+       color: #1a73e8;
+       .sidebar__item-icon, .sidebar__item-label { color: #1a73e8; }
     }
 
     .sidebar__item-icon {
@@ -227,9 +294,33 @@ export interface SidebarUser {
       transition: color .15s;
     }
 
+    .sidebar__item-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #dadce0;
+      flex-shrink: 0;
+      transition: background .15s;
+    }
+
+    .sidebar__item--active .sidebar__item-dot {
+      background: #1a73e8;
+    }
+
     .sidebar__item-label {
+      flex: 1;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    .sidebar__item-arrow {
+      font-size: 18px !important;
+      color: #80868b;
+      margin-right: -4px;
+    }
+
+    .sidebar__children {
+      margin-bottom: 4px;
     }
 
     /* ── Spacer ────────────────────────────────────── */
@@ -369,9 +460,50 @@ export class SidebarComponent {
   toggleSidebar = output<void>();
   logout        = output<void>();
 
+  private readonly router = inject(Router);
+
+  // Track open menu groups
+  private readonly _openGroups = signal<Set<string>>(new Set(['engineering'])); // Default open engineering
+  
+  isGroupOpen(id: string): boolean {
+    return this._openGroups().has(id);
+  }
+
+  toggleGroup(id: string): void {
+    const current = this._openGroups();
+    const next = new Set(current);
+    if (next.has(id)) {
+      next.delete(id);
+    } else {
+      next.add(id);
+    }
+    this._openGroups.set(next);
+  }
+
+  /**
+   * Check if a menu item or any of its children is currently active
+   */
+  isItemActive(item: MenuItem): boolean {
+    if (item.route) {
+      // Direct route match
+      return this.router.isActive(item.route, {
+        paths: 'subset',
+        queryParams: 'subset',
+        fragment: 'ignored',
+        matrixParams: 'ignored'
+      });
+    }
+
+    if (item.children) {
+      // Recursive check for children
+      return item.children.some(child => this.isItemActive(child));
+    }
+
+    return false;
+  }
+
   /**
    * Resolve a safe SidebarUser từ raw user input.
-   * Luôn trả về object có displayName và email — không bao giờ null/undefined.
    */
   sidebarUser(): SidebarUser {
     const u = this.user();

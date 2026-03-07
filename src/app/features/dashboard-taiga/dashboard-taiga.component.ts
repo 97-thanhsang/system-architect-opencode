@@ -13,7 +13,7 @@ import {
   TuiBadgeModule
 } from '@taiga-ui/kit';
 
-import { AuthService } from '../../../core/auth/auth.service';
+import { AuthService } from '../../core/auth/auth.service';
 
 interface Role {
   id: string;

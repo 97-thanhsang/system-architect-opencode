@@ -4,14 +4,14 @@
  * This file demonstrates how to use the TokenStorageService in Angular 17+ applications
  */
 
-import { Component, inject, effect, OnInit } from '@angular/core';
+import { Component, inject, effect, OnInit, OnDestroy, Injectable, APP_INITIALIZER } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, CanActivateFn } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { HttpClient } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Subject, takeUntil } from 'rxjs';
 
 import {
   TokenStorageService,
@@ -262,12 +262,10 @@ export class LoginExampleComponent implements OnInit {
 // Example 2: Service Usage
 // ============================================
 
-import { Injectable } from '@angular/core';
-
 @Injectable({
   providedIn: 'root'
 })
-export class ApiService {
+export class ApiExampleService {
   private readonly tokenStorage = inject(TokenStorageService);
   private readonly http = inject(HttpClient);
 
@@ -312,8 +310,6 @@ export class ApiService {
 // Example 3: Guard Usage
 // ============================================
 
-import { CanActivateFn, Router } from '@angular/router';
-
 /**
    * Auth Guard using TokenStorageService
    */
@@ -345,8 +341,6 @@ export const modernAuthGuard: CanActivateFn = (route, state) => {
 // Example 4: Configuration
 // ============================================
 
-import { APP_INITIALIZER } from '@angular/core';
-
 /**
    * Configure TokenStorageService on app startup
    */
@@ -375,9 +369,6 @@ export const tokenStorageInitializerProvider = {
 // ============================================
 // Example 5: Advanced Patterns
 // ============================================
-
-import { Component, inject, OnDestroy } from '@angular/core';
-import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-advanced-example',
@@ -432,25 +423,3 @@ export class AdvancedExampleComponent implements OnDestroy {
     this.destroy$.complete();
   }
 }
-
-// ============================================
-// Module Setup (if using NgModules)
-// ============================================
-
-/*
-import { NgModule } from '@angular/core';
-import { HTTP_INTERCEPTORS } from '@angular/common/http';
-
-@NgModule({
-  providers: [
-    TokenStorageService,
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: TokenRefreshInterceptor, // Class-based version if needed
-      multi: true
-    },
-    tokenStorageInitializerProvider
-  ]
-})
-export class AuthModule { }
-*/
