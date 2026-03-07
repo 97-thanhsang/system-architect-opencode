@@ -18,8 +18,8 @@ Roadmap được tổ chức theo **từng Feature** thay vì Phase, giúp dễ 
 
 ## ✅ FEATURE 1: Authentication & Authorization
 
-> **Status**: ✅ **COMPLETED**  
-> **Timeline**: Phase 0-1 + Week 1 Day 2  
+> **Status**: ✅ **COMPLETED + ENHANCED**  
+> **Timeline**: Phase 0-1 + Week 1 Day 2 + March 7 Hotfix  
 > **Priority**: Critical
 
 ### 📝 Description
@@ -48,6 +48,10 @@ Hệ thống xác thực và phân quyền ngườ dùng với Jira integration.
 - [x] Auth Guard - Route protection
 - [x] Error handling & validation
 - [x] Loading states & user feedback
+- [x] **TokenStorageService** - Quản lý token với Angular Signals (NEW)
+- [x] **Session Persistence** - Giữ đăng nhập sau refresh (NEW)
+- [x] **Auto Token Refresh** - Tự động refresh token trước khi hết hạn (NEW)
+- [x] **Logout UI** - Nút đăng xuất trong Header và Sidebar (FIXED)
 
 #### Integration
 - [x] Kết nối với Jira Server (task.ascvn.com.vn)
@@ -75,15 +79,22 @@ apps/api/src/
 
 src/app/core/
 ├── auth/
-│   ├── jira-auth.service.ts     ✅ Updated - gọi backend
-│   └── auth.service.ts          ✅ Legacy support
+│   ├── jira-auth.service.ts         ✅ Updated - gọi backend + user restore
+│   ├── auth.service.ts              ✅ Legacy support
+│   ├── token-storage.service.ts     ✅ NEW: Token management với Signals
+│   └── token-storage.service.spec.ts ✅ NEW: Unit tests (588 lines)
 ├── interceptors/
-│   ├── jwt.interceptor.ts       ✅ Auto-add token
+│   ├── jwt.interceptor.ts           ✅ Auto-add token
+│   ├── token-refresh.interceptor.ts ✅ NEW: Auto-refresh + request queuing
 │   ├── error.interceptor.ts
 │   └── logging.interceptor.ts
 └── guards/
-    ├── auth.guard.ts            ✅ Route protection
+    ├── auth.guard.ts                ✅ Route protection (dual check)
     └── role.guard.ts
+
+src/app/features/modules/fe-module/components/
+├── header/header.component.ts       ✅ Logout button in user dropdown
+└── sidebar/sidebar.component.ts     ✅ Logout button in user section
 
 src/app/features/auth/
 └── components/
@@ -95,14 +106,20 @@ src/app/features/auth/
 - [x] Manual testing: Login with Jira credentials
 - [x] JWT token validation
 - [x] API endpoint testing
-- [ ] Unit tests (pending)
+- [x] **Session persistence testing** - Giữ đăng nhập sau refresh
+- [x] **Logout functionality testing** - Nút đăng xuất hoạt động đúng
+- [x] **Token auto-refresh testing** - Tự động refresh trước khi hết hạn
+- [x] **Unit tests**: TokenStorageService (588 lines)
+- [x] **Unit tests**: JiraAuthService (user restoration)
 - [ ] E2E tests (pending)
 
 ### 📊 Metrics
-- **Time**: ~2-3 days
-- **Files**: 12+ files
+- **Time**: ~3-4 days (2-3 days core + 1 day session persistence enhancement)
+- **Files**: 15+ files (12 core + 3 new)
 - **Dependencies**: 5+ packages
 - **API Endpoints**: 4 endpoints
+- **Test Coverage**: ~65% (588 lines unit tests)
+- **Lines of Code**: ~2,500 (new services + tests)
 
 ### 📚 Documentation
 - [Research Report](./RESEARCH_LOGIN_FLOW.md)

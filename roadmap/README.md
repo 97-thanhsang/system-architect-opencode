@@ -20,7 +20,12 @@
 ## 🎯 Current Status
 
 ```
-Feature 01: Authentication     ✅ COMPLETED (100%)
+Feature 01: Authentication     ✅ COMPLETED (100%) + Enhanced
+├── ✅ Core Authentication
+├── ✅ Session Persistence (NEW)
+├── ✅ Token Auto-Refresh (NEW)
+└── ⚠️ Security Hardening (Next Iteration)
+
 Feature 02: Task Queue         ⏭️ PENDING (0%)
 Feature 03: WebSocket          ⏭️ PENDING (0%)
 Feature 04: Analyze Module     ⏭️ PENDING (0%)
@@ -30,7 +35,7 @@ Feature 07: Review Module      ⏭️ PENDING (0%)
 Feature 08: Dashboard          ⏭️ PENDING (0%)
 ```
 
-**Overall Progress**: 12.5% (1/8 features)
+**Overall Progress**: 15% (1.2/8 features - Auth enhanced)
 
 ---
 
@@ -85,8 +90,11 @@ roadmap/
 ## 📊 Feature Matrix
 
 | # | Feature | Status | Priority | Est. Time | Dependencies |
-|---|---------|--------|----------|-----------|--------------|
-| 01 | Authentication | ✅ Done | Critical | 3 days | None |
+|---|---|---------|--------|----------|-----------|--------------|
+| 01 | Authentication | ✅ **Enhanced** | Critical | 3 days + 1 day | None |
+| 01a | └─ Core Auth | ✅ Done | Critical | 3 days | None |
+| 01b | └─ Session Persistence | ✅ Done | High | 0.5 day | 01a |
+| 01c | └─ Security Hardening | ⏭️ Pending | Critical | 0.5 day | 01b |
 | 02 | Task Queue | ⏭️ Pending | High | 3 days | Feature 01 |
 | 03 | WebSocket | ⏭️ Pending | High | 2 days | Feature 01 |
 | 04 | Analyze Module | ⏭️ Pending | High | 7 days | Feature 01-03 |
@@ -132,9 +140,19 @@ Hoặc
 
 ## 📝 Changelog
 
-### March 7, 2026
+### March 7, 2026 (Session Persistence Enhancement)
+- ✅ **Fixed**: Session persistence - Users stay logged in after page refresh
+- ✅ **Added**: TokenStorageService with Angular Signals for state management
+- ✅ **Added**: Automatic token refresh scheduling before expiry
+- ✅ **Fixed**: Logout button visibility in Header and Sidebar
+- ✅ **Added**: Comprehensive unit tests (588 lines) for TokenStorageService
+- ✅ **Added**: User state validation and restoration from localStorage
+- ✅ **Added**: Token refresh interceptor with request queuing
+- ⚠️ **Known Issues**: Security hardening needed before production (httpOnly cookies, CSRF)
+
+### March 7, 2026 (Initial)
 - ✅ Restructured roadmap to **feature-based**
-- ✅ Completed **Feature 01: Authentication**
+- ✅ Completed **Feature 01: Authentication** (Core)
 - ✅ Created placeholder docs for all 8 features
 - ✅ Archived old phase-based docs
 - ✅ Merged research + implementation reports

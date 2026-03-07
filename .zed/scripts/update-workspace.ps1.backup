@@ -1,0 +1,87 @@
+# Update workspace file from git worktrees (Zed Edition)
+$ErrorActionPreference = 'Stop'
+
+# Note: Zed uses different workspace format than VSCode
+# This script will update Zed workspace JSON file
+
+$workspacePath = 'E:\SOURCE\ems-finance.zed-workspace.json'
+$mainRepo = 'E:/SOURCE/system-architect-opencode'
+
+Write-Host 'Scanning worktrees...' -ForegroundColor Cyan
+$worktrees = git worktree list
+Write-Host "Found $($worktrees.Count) worktrees" -ForegroundColor Green
+
+$folders = @()
+
+foreach ($line in $worktrees) {
+    if ([string]::IsNullOrWhiteSpace($line)) { continue }
+
+    $parts = $line -split '\s+', 4
+    $path = $parts[0]
+    $branch = if ($parts[2] -match '\[([^\]]+)\]') { $matches[1] } else { 'unknown' }
+
+    $isMain = $path -eq $mainRepo
+
+    if ($isMain) {
+        $name = "Main ($branch)"
+        $folderPath = 'ems.finance.fe'
+    } else {
+        $suffix = Split-Path -Path $path -Leaf
+
+        # Extract issue ID (EMSPRO2-XXXX)
+        $issueId = $suffix -replace '.*?(EMSPRO2-\d+).*', '$1'
+
+        if ($issueId -eq $suffix) {
+            $issueId = $branch -replace '^[a-z]+/', ''
+        }
+
+        # Icon based on branch type
+        $icon = if ($branch -match '^bug') { '🐛' }
+                elseif ($branch -match '^feature') { '✨' }
+                elseif ($branch -match '^fix') { '🔧' }
+                elseif ($branch -match '^hotfix') { '🚨' }
+                else { '📦' }
+
+        # Title case issue ID
+        $issueIdTitle = if ($issueId -match '^(bug|feature|fix|hotfix)/(.*)') {
+            "$($matches[1].ToUpper()) $($matches[2])"
+        } else {
+            $issueId
+        }
+
+        # Track branch name for display
+        $trackBranch = "origin/devSang"
+
+        $name = "$icon $issueIdTitle ($trackBranch)"
+        $folderPath = $path
+    }
+
+    $folders += @{
+        name = $name
+        path = $folderPath
+    }
+
+    Write-Host "  - $name" -ForegroundColor Gray
+}
+
+# Build workspace JSON for Zed
+# Zed workspace format: { "folders": [ { "path": "..." }, ... ] }
+$workspaceData = @{
+    folders = $folders | ForEach-Object {
+        @{
+            path = $_.path
+        }
+    }
+}
+
+$workspaceJson = $workspaceData | ConvertTo-Json -Depth 10
+
+Write-Host "Updating Zed workspace file..." -ForegroundColor Cyan
+
+# Save with UTF-8 encoding
+[System.IO.File]::WriteAllText($workspacePath, $workspaceJson, [System.Text.UTF8Encoding]::new($false))
+
+Write-Host 'Zed workspace file updated successfully!' -ForegroundColor Green
+Write-Host "File: $workspacePath" -ForegroundColor Gray
+Write-Host ""
+Write-Host "Reload Zed workspace to see changes" -ForegroundColor Cyan

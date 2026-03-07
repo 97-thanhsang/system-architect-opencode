@@ -1,0 +1,94 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        // ===== GIT WORKTREE TASKS =====
+        {
+            "label": "📊 Git: List All Worktrees",
+            "type": "shell",
+            "command": "powershell -ExecutionPolicy Bypass -File ${workspaceFolder}/.vscode/scripts/list-worktrees.ps1",
+            "options": {
+                "cwd": "E:/SOURCE/system-architect-opencode"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "new",
+                "focus": true,
+                "clear": true
+            },
+            "group": "none"
+        },        
+        {
+            "label": "➕ Git: Create New Worktree",
+            "type": "shell",
+            "command": "powershell -ExecutionPolicy Bypass -File ${workspaceFolder}/.vscode/scripts/create-worktree.ps1 ${input:worktreeName} ${input:branchName}",
+            "options": {
+                "cwd": "E:/SOURCE/system-architect-opencode"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "new",
+                "focus": true
+            },
+            "group": "none"
+        },
+        {
+            "label": "➖ Git: Remove Worktree",
+            "type": "shell",
+            "command": "powershell -ExecutionPolicy Bypass -File ${workspaceFolder}/.vscode/scripts/remove-worktree.ps1 ${input:worktreeToRemove} ${input:branchToDelete}",
+            "options": {
+                "cwd": "E:/SOURCE/system-architect-opencode"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "new",
+                "focus": true
+            },
+            "group": "none"
+        },
+        {
+            "label": "📝 Workspace: Update from Worktrees",
+            "type": "shell",
+            "command": "powershell -ExecutionPolicy Bypass -File ${workspaceFolder}/.vscode/scripts/update-workspace.ps1",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "new",
+                "focus": true,
+                "clear": true
+            },
+            "group": "none"
+        }
+    ],
+    // ===== INPUT VARIABLES =====
+    "inputs": [
+        {
+            "id": "commitMessage",
+            "type": "promptString",
+            "description": "Commit message"
+        },
+        {
+            "id": "worktreeToRemove",
+            "type": "promptString",
+            "description": "Worktree to remove (e.g., feature-CTUMP-5099)"
+        },
+        {
+            "id": "branchToDelete",
+            "type": "promptString",
+            "description": "Branch to delete (e.g., feature-CTUMP-5099)"
+        },
+        {
+            "id": "worktreeName",
+            "type": "promptString",
+            "description": "Worktree folder name (e.g., feature-CTUMP-5100)"
+        },
+        {
+            "id": "branchName",
+            "type": "promptString",
+            "description": "Branch name to pull from",
+            "default": "feature/learning-outcomes"
+        }
+    ]
+}

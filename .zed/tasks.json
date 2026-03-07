@@ -1,0 +1,62 @@
+[
+  {
+    "label": "Git: List All Worktrees",
+    "command": "powershell",
+    "args": [
+      "-ExecutionPolicy",
+      "Bypass",
+      "-File",
+      ".zed/scripts/list-worktrees.ps1",
+    ],
+  },
+  {
+    "label": "Git: Cleanup Merged Worktrees",
+    "command": "powershell",
+    "args": [
+      "-ExecutionPolicy",
+      "Bypass",
+      "-File",
+      ".zed/scripts/cleanup-merged-worktrees.ps1",
+    ],
+  },
+  {
+    "label": "Git: Create New Worktree",
+    "command": "powershell",
+    "args": [
+      "-ExecutionPolicy",
+      "Bypass",
+      "-File",
+      ".zed/scripts/create-worktree.ps1",
+    ],
+  },
+  {
+    "label": "Git: Remove Worktree",
+    "command": "powershell",
+    "args": [
+      "-ExecutionPolicy",
+      "Bypass",
+      "-File",
+      ".zed/scripts/remove-worktree.ps1",
+    ],
+  },
+  {
+    "label": "Zed: Open All Worktrees",
+    "command": "powershell",
+    "args": [
+      "-ExecutionPolicy",
+      "Bypass",
+      "-File",
+      ".zed/scripts/open-all-worktrees.ps1",
+    ],
+  },
+  {
+    "label": "Git: Clean Orphaned Worktrees",
+    "command": "powershell",
+    "args": [
+      "-ExecutionPolicy",
+      "Bypass",
+      "-File",
+      ".zed/scripts/clean-orphaned-worktrees.ps1",
+    ],
+  },
+]
