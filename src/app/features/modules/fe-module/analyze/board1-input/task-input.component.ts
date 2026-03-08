@@ -36,111 +36,136 @@ import { PolymorpheusContent } from '@tinkoff/ng-polymorpheus';
     TuiFieldErrorPipeModule
   ],
   template: `
-    <div class="g-card h-full flex flex-col shadow-sm border-0 bg-white">
-      <!-- Card Header: Same as Board 2 & 3 -->
-      <div class="g-card__header">
+    <div class="flex flex-col h-full bg-white rounded-[24px] shadow-google-soft overflow-hidden animate-fade-in border border-google-border">
+      <!-- Card Header -->
+      <div class="px-6 py-5 border-b border-google-border flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <div class="g-stat-card__icon g-stat-card__icon--blue" style="width: 36px; height: 36px;">
-            <span class="material-icons-outlined" style="font-size: 20px;">input</span>
+          <div class="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center text-google-blue border border-blue-100 shadow-sm">
+            <span class="material-icons-outlined text-xl">input</span>
           </div>
           <div class="flex flex-col">
-            <span class="g-card__title">Input Manifest</span>
-            <span style="font-size: 11px; color: #80868b; font-weight: 500; text-transform: uppercase; letter-spacing: 0.02em;">
-               Source selection & data injection
-            </span>
+            <span class="text-base font-medium text-slate-900 leading-tight">Input Manifest</span>
+            <span class="text-[11px] text-google-gray font-medium uppercase tracking-wider">Source Selection & Injection</span>
           </div>
         </div>
       </div>
       
-      <div class="g-card__body flex-1 flex flex-col px-6 py-6 overflow-hidden gap-6">
+      <div class="flex-1 flex flex-col p-8 overflow-hidden gap-10">
         
         <!-- ── REGION 01: WORKSPACE CONFIG ────── -->
-        <div class="flex flex-col gap-3">
-          <span class="region-label">WORKSPACE CONFIGURATION</span>
-          <div class="grid grid-cols-1 gap-2">
-            <!-- Source Folder Selection -->
-            <input #projectDir type="file" webkitdirectory (change)="onFolderSelected($event, 'project')" style="display: none" />
-            <input #saveDir type="file" webkitdirectory (change)="onFolderSelected($event, 'save')" style="display: none" />
+        <div class="bg-slate-50/50 p-5 rounded-2xl border border-slate-100 transition-all hover:bg-white hover:border-blue-100 group">
+          <div class="flex items-center gap-2 mb-5">
+            <span class="material-icons-outlined text-google-blue text-sm">settings</span>
+            <span class="text-[10px] font-bold text-google-gray uppercase tracking-widest">01. WORKSPACE CONFIGURATION</span>
+          </div>
+          
+          <div class="flex flex-col gap-4">
+            <input #projectDir type="file" webkitdirectory (change)="onFolderSelected($event, 'project')" class="hidden" />
+            <input #saveDir type="file" webkitdirectory (change)="onFolderSelected($event, 'save')" class="hidden" />
 
-            <div class="input-selection-row" (click)="projectDir.click()">
-              <div class="flex items-center gap-3 flex-1 min-w-0">
-                <span class="material-icons-outlined text-[#5F6368]">folder</span>
+            <div (click)="projectDir.click()" 
+                 class="flex items-center justify-between p-3.5 bg-white border border-google-border rounded-xl cursor-pointer transition-all hover:border-google-blue hover:shadow-sm">
+              <div class="flex items-center gap-4 flex-1 min-w-0">
+                <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
+                  <span class="material-icons-outlined text-lg">folder</span>
+                </div>
                 <div class="flex flex-col min-w-0">
-                  <span class="text-[9px] font-bold text-[#80868B] uppercase">Source Path</span>
-                  <span class="text-[13px] font-medium text-[#202124] truncate">{{ projectPath() || 'Select Project Root...' }}</span>
+                  <span class="text-[8px] font-bold text-google-gray uppercase leading-none mb-1">Source Path</span>
+                  <span class="text-[13px] font-medium text-slate-700 truncate">{{ projectPath() || 'Select Project Root...' }}</span>
                 </div>
               </div>
-              <span class="material-icons-outlined text-[#DADCE0] text-sm">chevron_right</span>
+              <span class="material-icons-outlined text-slate-300 text-xs">edit</span>
             </div>
 
-            <div class="input-selection-row" (click)="saveDir.click()">
-              <div class="flex items-center gap-3 flex-1 min-w-0">
-                <span class="material-icons-outlined text-[#5F6368]">save</span>
+            <div (click)="saveDir.click()" 
+                 class="flex items-center justify-between p-3.5 bg-white border border-google-border rounded-xl cursor-pointer transition-all hover:border-google-blue hover:shadow-sm">
+              <div class="flex items-center gap-4 flex-1 min-w-0">
+                <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
+                  <span class="material-icons-outlined text-lg">save</span>
+                </div>
                 <div class="flex flex-col min-w-0">
-                  <span class="text-[9px] font-bold text-[#80868B] uppercase">Reports Path</span>
-                  <span class="text-[13px] font-medium text-[#202124] truncate">{{ savePath() || 'Select Storage Path...' }}</span>
+                  <span class="text-[8px] font-bold text-google-gray uppercase leading-none mb-1">Reports Path</span>
+                  <span class="text-[12px] font-medium text-slate-700 truncate">{{ savePath() || 'Select Storage Path...' }}</span>
                 </div>
               </div>
-              <span class="material-icons-outlined text-[#DADCE0] text-sm">chevron_right</span>
+              <span class="material-icons-outlined text-slate-300 text-xs">edit</span>
             </div>
           </div>
         </div>
 
         <!-- ── REGION 02: INJECTION UNIT ──── -->
-        <div class="flex-1 flex flex-col min-h-0">
-          <span class="region-label mb-3">DATA INJECTION UNIT</span>
-          <div class="injection-container flex-1 flex flex-col bg-[#F8F9FA] rounded-2xl border border-[#E9ECEF] overflow-hidden shadow-inner">
-            <div class="injection-tabs">
-              <button class="inj-tab" [class.active]="activeTab === 0" (click)="activeTab = 0">TEXT_INPUT</button>
-              <button class="inj-tab" [class.active]="activeTab === 1" (click)="activeTab = 1">JIRA_LINK</button>
-              <button class="inj-tab" [class.active]="activeTab === 2" (click)="activeTab = 2">REMOTE_BROWSE</button>
+        <div class="flex-1 flex flex-col min-h-0 bg-slate-50/50 p-5 rounded-2xl border border-slate-100 transition-all hover:bg-white hover:border-blue-100">
+          <div class="flex items-center gap-2 mb-5">
+            <span class="material-icons-outlined text-google-blue text-sm">dynamic_feed</span>
+            <span class="text-[10px] font-bold text-google-gray uppercase tracking-widest">02. DATA INJECTION UNIT</span>
+          </div>
+
+          <div class="flex-1 flex flex-col bg-slate-100/50 rounded-xl border border-slate-200 overflow-hidden">
+            <div class="h-11 bg-slate-50 px-4 flex items-center gap-5 border-b border-slate-200">
+              <button class="h-full border-b-2 font-bold text-[10px] tracking-wider transition-all" 
+                      [class.border-google-blue]="activeTab === 0" [class.text-google-blue]="activeTab === 0"
+                      [class.border-transparent]="activeTab !== 0" [class.text-slate-400]="activeTab !== 0"
+                      (click)="activeTab = 0">TEXT_INPUT</button>
+              <button class="h-full border-b-2 font-bold text-[10px] tracking-wider transition-all" 
+                      [class.border-google-blue]="activeTab === 1" [class.text-google-blue]="activeTab === 1"
+                      [class.border-transparent]="activeTab !== 1" [class.text-slate-400]="activeTab !== 1"
+                      (click)="activeTab = 1">JIRA_LINK</button>
+              <button class="h-full border-b-2 font-bold text-[10px] tracking-wider transition-all" 
+                      [class.border-google-blue]="activeTab === 2" [class.text-google-blue]="activeTab === 2"
+                      [class.border-transparent]="activeTab !== 2" [class.text-slate-400]="activeTab !== 2"
+                      (click)="activeTab = 2">REMOTE_BROWSE</button>
             </div>
 
-            <div class="flex-1 flex flex-col p-5 bg-white overflow-hidden">
+            <div class="flex-1 flex flex-col p-5 bg-white">
               @if (activeTab === 0) {
                 <div class="flex flex-col h-full animate-fade-in">
-                  <textarea
-                    [ngModel]="rawText()"
-                    (ngModelChange)="rawText.set($event)"
-                    class="inj-textarea flex-1"
-                    placeholder="Describe your requirements or paste technical specifications..."
-                  ></textarea>
-                  <button class="inj-action-btn mt-4" [disabled]="!rawText().trim()" (click)="addText()">
-                    <span class="material-icons-outlined text-[18px]">add_task</span>
-                    Stage Requirements
-                  </button>
+                  <div class="flex-1 border-[1.5px] border-slate-200 rounded-xl p-3 bg-slate-50/30 focus-within:border-google-blue focus-within:ring-4 focus-within:ring-blue-50 transition-all">
+                    <textarea
+                      [ngModel]="rawText()"
+                      (ngModelChange)="rawText.set($event)"
+                      class="w-full h-full border-none outline-none text-[13px] text-slate-700 bg-transparent resize-none leading-relaxed"
+                      placeholder="Enter technical requirements or specifications..."
+                    ></textarea>
+                  </div>
+                  <div class="flex justify-end mt-4">
+                    <button class="h-9 px-5 border border-google-border rounded-full text-[11px] font-bold text-google-gray uppercase tracking-wider hover:border-google-blue hover:text-google-blue hover:bg-blue-50 transition-all disabled:opacity-40"
+                            [disabled]="!rawText().trim()" (click)="addText()">
+                      <span class="material-icons-outlined text-sm mr-2">add</span> Stage Data
+                    </button>
+                  </div>
                 </div>
               }
 
               @if (activeTab === 1) {
-                <div class="flex flex-col animate-fade-in py-4">
-                  <div class="inj-input-wrap mb-4">
-                    <span class="material-icons-outlined text-[#5F6368] text-lg">link</span>
+                <div class="flex flex-col animate-fade-in py-2">
+                  <div class="flex items-center gap-3 h-12 px-4 border-[1.5px] border-slate-200 rounded-xl bg-white focus-within:border-google-blue transition-all mb-4">
+                    <span class="material-icons-outlined text-slate-400">link</span>
                     <input 
                       [ngModel]="jiraUrl()" 
                       (ngModelChange)="jiraUrl.set($event)"
-                      class="inj-input-field"
-                      placeholder="https://jira.ascvn.com.vn/browse/EMSPRO2-XXXX"
+                      class="flex-1 border-none outline-none text-[13px] text-slate-700 bg-transparent"
+                      placeholder="Paste Jira URL..."
                     />
                   </div>
-                  <button class="inj-action-btn" [disabled]="!jiraUrl().trim()" (click)="addJiraUrl()">
-                    <span class="material-icons-outlined text-[18px]">bolt</span>
-                    Resolve Jira Context
-                  </button>
+                  <div class="flex justify-end">
+                    <button class="h-9 px-5 border border-google-border rounded-full text-[11px] font-bold text-google-gray uppercase tracking-wider hover:border-google-blue hover:text-google-blue hover:bg-blue-50 transition-all disabled:opacity-40"
+                            [disabled]="!jiraUrl().trim()" (click)="addJiraUrl()">
+                      <span class="material-icons-outlined text-sm mr-2">bolt</span> Resolve Context
+                    </button>
+                  </div>
                 </div>
               }
 
               @if (activeTab === 2) {
-                <div class="flex-1 flex flex-col items-center justify-center animate-fade-in text-center p-4">
-                  <div class="w-14 h-14 rounded-full bg-[#EBF5FF] flex items-center justify-center mb-4 border border-[#D2E3FC]">
-                     <span class="material-icons-outlined text-[#1A73E8] text-2xl">search</span>
+                <div class="flex-1 flex flex-col items-center justify-center animate-fade-in text-center py-4">
+                  <div class="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mb-4 border border-blue-100">
+                     <span class="material-icons-outlined text-google-blue text-2xl">search</span>
                   </div>
-                  <h4 class="text-[14px] font-bold text-[#202124] mb-2">Remote Task Browser</h4>
-                  <p class="text-[12px] text-[#5F6368] leading-relaxed mb-6">
-                    Connect to your enterprise task board to select and import specifications directly.
-                  </p>
-                  <button tuiButton appearance="primary" size="m" class="g-btn--primary" (click)="showJiraSearch(searchDialog)" style="border-radius: 20px; padding: 0 24px; height: 36px;">
-                    Search Jira Board
+                  <h4 class="text-sm font-bold text-slate-800 mb-1">Task Board Connection</h4>
+                  <p class="text-[11px] text-google-gray mb-5 px-6 leading-relaxed">Import units directly from the linked Jira board.</p>
+                  <button (click)="showJiraSearch(searchDialog)" 
+                          class="h-9 px-6 bg-google-blue text-white text-[11px] font-bold rounded-full shadow-google-soft hover:bg-google-blue-dark transition-all uppercase tracking-wider">
+                    Search Board
                   </button>
                 </div>
               }
@@ -149,57 +174,58 @@ import { PolymorpheusContent } from '@tinkoff/ng-polymorpheus';
         </div>
 
         <!-- ── REGION 03: MANIFEST STACK ──── -->
-        <div class="flex flex-col min-h-0">
-          <div class="flex items-center justify-between mb-3 px-1">
-             <span class="region-label">QUEUED UNITS MANIFEST</span>
-             <div class="stack-badge">{{ inputs().length }} UNITS STAGED</div>
+        <div class="bg-slate-50/50 p-5 rounded-2xl border border-slate-100 flex flex-col min-h-0 hover:bg-white hover:border-blue-100 transition-all">
+          <div class="flex items-center justify-between mb-5 px-1">
+             <div class="flex items-center gap-2">
+                <span class="material-icons-outlined text-google-blue text-sm">checklist</span>
+                <span class="text-[10px] font-bold text-google-gray uppercase tracking-widest">03. QUEUED UNITS MANIFEST</span>
+                <div class="w-5 h-5 rounded-full bg-blue-50 flex items-center justify-center text-[10px] font-bold text-google-blue border border-blue-100">{{ inputs().length }}</div>
+             </div>
+             @if (inputs().length > 0) {
+                <button class="flex items-center gap-1.5 px-2 py-1 text-[9px] font-extrabold text-google-gray hover:text-red-500 transition-all uppercase tracking-tighter" (click)="clearAll()">
+                  <span class="material-icons-outlined text-sm">delete_sweep</span> WIPE STACK
+                </button>
+             }
           </div>
 
-          <div class="manifest-list custom-scrollbar overflow-y-auto">
+          <div class="flex flex-col gap-2.5 min-h-[120px] max-h-[240px] overflow-y-auto pr-1 custom-scrollbar">
             @for (item of inputs(); track item.id) {
-              <div class="manifest-item animate-slide-in group">
-                <div class="item-icon-box" [ngClass]="item.type">
+              <div class="flex items-center gap-4 p-2.5 bg-white border border-google-border rounded-xl group transition-all hover:border-slate-300 hover:shadow-sm">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                     [class.bg-blue-50]="item.type === 'text'" [class.text-google-blue]="item.type === 'text'"
+                     [class.bg-blue-100]="item.type !== 'text'" [class.text-blue-700]="item.type !== 'text'">
                    <span class="material-icons-outlined text-[16px]">{{ getTypeIcon(item.type) }}</span>
                 </div>
                 
                 <div class="flex-1 min-w-0">
-                  <div class="flex items-center justify-between gap-2 mb-1">
-                    <span class="text-[10px] font-extrabold text-[#202124] truncate uppercase tracking-tighter">{{ item.label || 'DATA_UNIT' }}</span>
-                    <button class="opacity-0 group-hover:opacity-100 p-0.5 text-[#80868B] hover:text-[#D93025] transition-all" 
+                  <div class="flex items-center justify-between gap-2 mb-0.5">
+                    <span class="text-[9px] font-black text-slate-800 truncate uppercase tracking-tighter">{{ item.label || 'UNIT' }}</span>
+                    <button class="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-red-500 transition-all" 
                             (click)="removeInput(item.id)">
-                      <span class="material-icons-outlined text-sm">delete</span>
+                      <span class="material-icons-outlined text-sm">close</span>
                     </button>
                   </div>
-                  <div class="item-snippet">{{ item.content }}</div>
+                  <div class="text-[11px] text-google-gray truncate break-all">{{ item.content }}</div>
                 </div>
               </div>
             } @empty {
-              <div class="flex flex-col items-center justify-center py-10 opacity-20 border-2 border-dashed border-[#F1F3F4] rounded-2xl">
-                 <span class="material-icons-outlined text-3xl mb-2 text-[#5F6368]">playlist_add</span>
-                 <span class="text-[11px] font-bold uppercase tracking-[0.2em]">Staging area empty</span>
+              <div class="flex-1 flex flex-col items-center justify-center py-10 opacity-30 border border-dashed border-slate-200 rounded-2xl bg-white">
+                 <span class="material-icons-outlined text-2xl mb-1 text-slate-400">playlist_add</span>
+                 <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Awaiting Stage</span>
               </div>
             }
           </div>
-
-          @if (inputs().length > 0) {
-            <div class="mt-4 flex justify-end">
-              <button class="text-[11px] font-bold text-[#1A73E8] hover:underline" (click)="clearAll()">
-                CLEAR ENTIRE STACK
-              </button>
-            </div>
-          }
         </div>
 
         <!-- ── ACTION: EXECUTION COMMIT ──── -->
-        <div class="mt-2 pt-2 border-t border-[#F1F3F4]">
+        <div class="mt-2 flex justify-center">
           <button
-            class="g-btn g-btn--primary w-full"
-            style="height: 52px; font-size: 14px; letter-spacing: 0.05em;"
+            class="h-10 px-10 bg-google-blue text-white text-[11px] font-bold rounded-full shadow-google-soft hover:bg-google-blue-dark hover:shadow-google-hover hover:-translate-y-px active:translate-y-0 transition-all uppercase tracking-[0.1em]"
             [disabled]="isAnalyzing() || !canSubmit()"
             (click)="onExecute()"
           >
-            <span class="material-icons-outlined mr-3">rocket_launch</span>
-            COMMIT TO SYSTEM ANALYZER
+            <span class="material-icons-outlined mr-2.5 text-base">rocket_launch</span>
+            Commit to Analyzer
           </button>
         </div>
       </div>
@@ -207,21 +233,21 @@ import { PolymorpheusContent } from '@tinkoff/ng-polymorpheus';
 
     <!-- Jira Search Dialog -->
     <ng-template #searchDialog let-observer>
-       <div class="flex flex-col gap-4 p-4">
-         <h2 class="text-xl font-bold text-[#202124] tracking-tight mb-2">Search Enterprise Tasks</h2>
+       <div class="flex flex-col gap-5 p-6">
+         <h2 class="text-xl font-medium text-slate-900 tracking-tight">Enterprise Task Search</h2>
          <tui-input [(ngModel)]="searchQuery" [tuiTextfieldCleaner]="true" tuiTextfieldSize="m">
-            Task ID or Keyword
+            Keyword or ID
             <input tuiTextfield />
          </tui-input>
-         <div class="max-h-[350px] overflow-y-auto bg-[#F8F9FA] rounded-xl p-3 custom-scrollbar border border-[#E9ECEF]">
+         <div class="max-h-[350px] overflow-y-auto bg-slate-50 rounded-2xl p-3 border border-google-border">
             @for (task of mockJiraTasks; track task.id) {
-               <div class="p-4 bg-white hover:bg-[#F1F3F4] rounded-lg cursor-pointer transition-all flex justify-between items-center mb-2 border border-[#DADCE0] hover:border-[#BDC1C6] group"
+               <div class="p-4 bg-white hover:bg-blue-50 rounded-xl cursor-pointer transition-all flex justify-between items-center mb-2 border border-google-border hover:border-google-blue group"
                     (click)="selectJiraTask(task); observer.complete()">
                   <div class="flex flex-col gap-1">
-                    <span class="text-[11px] font-black text-[#1A73E8] uppercase tracking-tighter">{{task.id}}</span>
-                    <span class="text-[14px] font-semibold text-[#202124]">{{task.title}}</span>
+                    <span class="text-[10px] font-bold text-google-blue uppercase tracking-tighter">{{task.id}}</span>
+                    <span class="text-[14px] font-medium text-slate-800">{{task.title}}</span>
                   </div>
-                  <span class="material-icons-outlined text-[#DADCE0] group-hover:text-[#1A73E8] transition-colors">add_circle</span>
+                  <span class="material-icons-outlined text-slate-300 group-hover:text-google-blue transition-colors">add_circle</span>
                </div>
             }
          </div>
@@ -232,187 +258,6 @@ import { PolymorpheusContent } from '@tinkoff/ng-polymorpheus';
     :host {
       display: block;
       height: 100%;
-    }
-
-    .region-label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      font-weight: 800;
-      color: #ADB5BD;
-      letter-spacing: 0.1em;
-    }
-
-    /* Input Selection Rows */
-    .input-selection-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 16px;
-      background: #fff;
-      border: 1px solid #DADCE0;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      
-      &:hover {
-        background: #F8F9FA;
-        border-color: #BDC1C6;
-        box-shadow: 0 1px 2px rgba(60,64,67,0.3);
-      }
-    }
-
-    /* Injection Container Styles (Matching Output Viewer) */
-    .injection-container {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .injection-tabs {
-      height: 44px;
-      background: #F8F9FA;
-      padding: 0 16px;
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      border-bottom: 1px solid #EDF2F7;
-    }
-
-    .inj-tab {
-      height: 100%;
-      border: none;
-      background: transparent;
-      font-size: 10px;
-      font-weight: 800;
-      color: #80868B;
-      position: relative;
-      cursor: pointer;
-      letter-spacing: 0.05em;
-      transition: all 0.2s;
-      
-      &:hover { color: #202124; }
-      
-      &.active {
-        color: #1A73E8;
-        &::after {
-          content: '';
-          position: absolute;
-          bottom: -1px; left: 0; right: 0;
-          height: 3px;
-          background: #1A73E8;
-          border-radius: 3px 3px 0 0;
-        }
-      }
-    }
-
-    .inj-textarea {
-      width: 100%;
-      border: none;
-      outline: none;
-      font-size: 14px;
-      color: #3C4043;
-      background: transparent;
-      resize: none;
-      line-height: 1.6;
-      font-family: inherit;
-    }
-
-    .inj-input-wrap {
-      display: flex;
-      align-items: center;
-      background: #fff;
-      border: 1px solid #DADCE0;
-      border-radius: 10px;
-      padding: 0 16px;
-      height: 48px;
-      gap: 16px;
-      &:focus-within { border-color: #1A73E8; box-shadow: 0 0 0 2px rgba(26,115,232,0.1); }
-    }
-
-    .inj-input-field {
-      flex: 1;
-      border: none;
-      outline: none;
-      font-size: 14px;
-      color: #3C4043;
-      background: transparent;
-    }
-
-    .inj-action-btn {
-      height: 40px;
-      border: 1px solid #1A73E8;
-      background: #fff;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 700;
-      color: #1A73E8;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      padding: 0 20px;
-      cursor: pointer;
-      transition: all 0.2s;
-      &:hover:not(:disabled) { background: #F4F8FE; box-shadow: 0 1px 2px rgba(26,115,232,0.15); }
-      &:disabled { opacity: 0.5; cursor: not-allowed; border-color: #DADCE0; color: #ADB5BD; }
-    }
-
-    /* Manifest List (Bottom Section) */
-    .stack-badge {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 9px;
-      font-weight: 800;
-      color: #fff;
-      background: #5F6368;
-      padding: 2px 10px;
-      border-radius: 12px;
-    }
-
-    .manifest-list {
-      min-height: 160px;
-      max-height: 300px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .manifest-item {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 12px 16px;
-      background: #fff;
-      border: 1px solid #DADCE0;
-      border-radius: 14px;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      &:hover { 
-        border-color: #BDC1C6;
-        box-shadow: 0 2px 6px rgba(60,64,67,0.1);
-        transform: scale(1.005);
-      }
-    }
-
-    .item-icon-box {
-      width: 32px;
-      height: 32px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      &.text { background: #E8F0FE; color: #1A73E8; }
-      &.jira-url, &.jira-task { background: #E2F2FF; color: #0052CC; }
-    }
-
-    .item-snippet {
-      font-size: 12px;
-      color: #5F6368;
-      overflow-wrap: anywhere;
-      word-break: break-word;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      line-height: 1.4;
     }
 
     .custom-scrollbar::-webkit-scrollbar { width: 4px; }
