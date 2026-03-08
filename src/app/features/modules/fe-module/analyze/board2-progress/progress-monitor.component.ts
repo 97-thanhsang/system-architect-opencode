@@ -1,4 +1,4 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, inject, computed, ElementRef, ViewChild, AfterViewChecked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TuiProgressModule } from '@taiga-ui/kit';
 import { AnalyzeService } from '../analyze.service';
@@ -13,125 +13,164 @@ import { AnalyzeService } from '../analyze.service';
   template: `
     <div class="g-card h-full flex flex-col shadow-sm border-0 bg-white">
       <!-- Card Header -->
-      <div class="g-card__header">
+      <div class="g-card__header border-b border-slate-100 bg-slate-50/50">
         <div class="flex items-center gap-3">
           <div class="g-stat-card__icon g-stat-card__icon--yellow" style="width: 36px; height: 36px;">
-            <span class="material-icons-outlined" style="font-size: 20px;">memory</span>
+            <span class="material-icons-outlined" style="font-size: 20px;">psychology</span>
           </div>
           <div class="flex flex-col">
             <span class="g-card__title">Neural Processing Unit</span>
-            <span style="font-size: 11px; color: #80868b; font-weight: 500; text-transform: uppercase; letter-spacing: 0.02em;">
-               OpenCode Receival Pipeline
+            <span style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;">
+               Active Intelligence Stream
             </span>
           </div>
         </div>
       </div>
       
-      <div class="g-card__body flex-1 flex flex-col px-6 py-6 overflow-hidden">
+      <div class="g-card__body flex-1 flex flex-col p-0 overflow-hidden relative">
+        <!-- Background Pattern -->
+        <div class="absolute inset-0 opacity-[0.03] pointer-events-none" 
+             style="background-image: radial-gradient(#64748b 0.5px, transparent 0.5px); background-size: 20px 20px;"></div>
+
         @if (isAnalyzing() || progress() > 0) {
-          <!-- Neural Progress Visualization -->
-          <div class="mb-8">
-            <div class="flex justify-between items-end mb-3 px-1">
-              <div class="flex flex-col">
-                <span class="unit-label mb-1">PIPELINE THROUGHPUT</span>
-                <span class="text-[10px] font-extrabold text-google-blue tracking-widest uppercase animate-pulse">
-                   {{ getStageName() }}
-                </span>
+          <!-- Progress Header Overlay -->
+          <div class="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-slate-100 px-6 py-4">
+            <div class="flex justify-between items-center mb-2">
+              <div class="flex items-center gap-3">
+                <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">{{ getStageName() }}</span>
+                @if (isAnalyzing() && progress() < 100) {
+                  <button (click)="onCancel()" 
+                          class="flex items-center gap-1 px-2 py-0.5 bg-red-50 text-red-500 rounded-md hover:bg-red-500 hover:text-white transition-all group shadow-sm border border-red-100">
+                    <span class="material-icons-outlined text-[12px]">stop_circle</span>
+                    <span class="text-[9px] font-black uppercase tracking-tighter">Abort Pipeline</span>
+                  </button>
+                }
               </div>
-              <div class="flex flex-col items-end">
-                <span class="progress-val" [class.completed]="progress() === 100">{{ progress() }}%</span>
-              </div>
+              <span class="text-[11px] font-mono font-bold" [class.text-green-600]="progress() === 100" [class.text-amber-600]="progress() < 100">{{ progress() }}%</span>
             </div>
-            <div class="lab-progress-container shadow-inner bg-slate-100 rounded-full overflow-hidden h-2.5">
-              <div class="lab-progress-fill h-full transition-all duration-500 rounded-full" 
+            <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+              <div class="h-full transition-all duration-700 ease-out rounded-full" 
                    [style.width.%]="progress()"
-                   [ngClass]="progress() === 100 ? 'bg-green-500' : 'bg-amber-500'">
-                <div class="lab-progress-glow"></div>
-              </div>
+                   [ngClass]="progress() === 100 ? 'bg-green-500' : 'bg-amber-500'"></div>
             </div>
           </div>
 
-          <!-- Interactive Question Layer -->
-          @if (pendingQuestion(); as question) {
-            <div class="mb-6 animate-slide-in">
-              <div class="p-5 bg-blue-50 border border-blue-100 rounded-2xl shadow-sm">
-                <div class="flex items-center gap-2 mb-3">
-                  <span class="material-icons-outlined text-blue-600 text-sm">help_outline</span>
-                  <span class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Decision Required</span>
-                </div>
-                <h3 class="text-sm font-bold text-slate-900 mb-4">{{ question.title }}</h3>
-                <div class="flex flex-wrap gap-3">
-                  @for (opt of question.options; track opt.label) {
-                    <button (click)="onResponse(opt.label)" 
-                            class="px-4 py-2 bg-white border border-blue-200 rounded-xl text-[11px] font-bold text-blue-700 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shadow-sm">
-                      {{ opt.label }}
-                    </button>
-                  }
-                </div>
-              </div>
-            </div>
-          }
+          <!-- Interaction Stream -->
+          <div #scrollContainer class="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth custom-scrollbar">
+            @for (part of parts(); track part.id) {
+              <div class="part-container animate-slide-up">
+                
+                <!-- Reasoning Part (Thought) -->
+                @if (part.type === 'reasoning') {
+                  <div class="flex gap-4 group">
+                    <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                      <span class="material-icons-outlined text-slate-400 text-sm">tips_and_updates</span>
+                    </div>
+                    <div class="flex-1 bg-slate-50 border border-slate-100 rounded-2xl rounded-tl-none p-4 shadow-sm italic text-[12px] text-slate-500 leading-relaxed">
+                      {{ part.text }}
+                    </div>
+                  </div>
+                }
 
-          <!-- Floating Security Guard -->
-          @if (pendingPermission(); as perm) {
-            <div class="absolute inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
-              <div class="w-full max-w-sm bg-white rounded-[28px] shadow-2xl border border-slate-200 overflow-hidden">
-                <div class="p-8 text-center">
-                  <div class="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600 border border-amber-100 mx-auto mb-4">
-                    <span class="material-icons-outlined text-2xl">security</span>
+                <!-- Text Part (AI Response) -->
+                @if (part.type === 'text' && part.text) {
+                  <div class="flex gap-4">
+                    <div class="w-8 h-8 rounded-full bg-google-blue/10 flex items-center justify-center shrink-0 border border-google-blue/20">
+                      <span class="material-icons-outlined text-google-blue text-sm">smart_toy</span>
+                    </div>
+                    <div class="flex-1 bg-white border border-slate-100 rounded-2xl rounded-tl-none p-4 shadow-sm text-[13px] text-slate-700 leading-relaxed whitespace-pre-wrap">
+                      {{ part.text }}
+                    </div>
                   </div>
-                  <h3 class="text-lg font-bold text-slate-900 mb-2">Permission Required</h3>
-                  <p class="text-sm text-slate-600 mb-8">{{ perm.title }}</p>
-                  
-                  <div class="flex flex-col gap-2">
-                    <button (click)="onPermissionResponse('once')" class="h-11 bg-google-blue text-white rounded-xl font-bold text-sm">Allow Once</button>
-                    <button (click)="onPermissionResponse('always')" class="h-11 bg-white border border-google-blue text-google-blue rounded-xl font-bold text-sm">Always Allow</button>
-                    <button (click)="onPermissionResponse('reject')" class="h-11 text-slate-400 font-bold text-sm">Deny</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          }
+                }
 
-          <!-- OpenCode Terminal Module -->
-          <div class="terminal-module flex-1 flex flex-col min-h-0 rounded-2xl overflow-hidden border border-slate-200 bg-[#0F172A] shadow-2xl">
-            <div class="terminal-header h-9 bg-[#1E293B] px-4 flex items-center justify-between">
-              <div class="flex gap-1.5">
-                <div class="w-2.5 h-2.5 rounded-full bg-[#FF5F57]"></div>
-                <div class="w-2.5 h-2.5 rounded-full bg-[#FFBD2E]"></div>
-                <div class="w-2.5 h-2.5 rounded-full bg-[#28C840]"></div>
-              </div>
-              <div class="terminal-title font-mono text-[9px] text-slate-400 tracking-[0.2em] font-bold">AGENT_CORE_LOG_STREAM</div>
-              <div class="terminal-meta font-mono text-[8px] text-slate-500 bg-[#0F172A] px-2 py-0.5 rounded border border-white/5">SSL_ENCRYPTED</div>
-            </div>
-            
-            <div class="terminal-body flex-1 overflow-auto p-5 custom-scrollbar relative">
-              <div class="scanline"></div>
-              @for (log of logs(); track $index) {
-                <div class="log-entry animate-fade-in group mb-1.5 flex gap-4 font-mono text-[11px] leading-relaxed">
-                  <span class="log-ts text-slate-600 font-bold shrink-0">[{{ $index + 1 | number:'2.0-0' }}]</span>
-                  <div class="flex-1 min-w-0">
-                    <span class="log-text" [ngClass]="getLogClass(log)">{{ log }}</span>
+                <!-- Tool Part (Actions) -->
+                @if (part.type === 'tool') {
+                  <div class="ml-12 flex items-center gap-3 p-3 bg-white border border-slate-100 rounded-xl shadow-sm">
+                    <div class="w-6 h-6 rounded-lg flex items-center justify-center" 
+                         [ngClass]="part.state?.status === 'running' ? 'bg-amber-50 text-amber-600 animate-spin' : 'bg-green-50 text-green-600'">
+                      <span class="material-icons-outlined text-[14px]">
+                        {{ part.state?.status === 'running' ? 'autorenew' : 'check_circle' }}
+                      </span>
+                    </div>
+                    <div class="flex flex-col">
+                      <span class="text-[11px] font-bold text-slate-800 uppercase tracking-wider">{{ part.tool }}</span>
+                      <span class="text-[9px] text-slate-400 font-mono truncate max-w-[200px]">
+                        {{ part.state?.input?.filePath || part.state?.input?.pattern || 'Executing operation...' }}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              }
-              <div class="cursor-line flex gap-4 font-mono text-[11px] items-center mt-2">
-                <span class="log-ts text-slate-600 font-bold shrink-0">[{{ logs().length + 1 | number:'2.0-0' }}]</span>
-                <div class="flex items-center gap-2">
-                   <span class="text-google-blue font-black animate-pulse">></span>
-                   <div class="w-2 h-4 bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)] animate-blink"></div>
+                }
+
+                <!-- Permission Part (SECURITY) -->
+                @if (part.type === 'permission') {
+                  <div class="ml-12 p-5 bg-amber-50 border border-amber-100 rounded-2xl shadow-md border-l-4 border-l-amber-500 animate-pulse-subtle">
+                    <div class="flex items-center gap-2 mb-3">
+                      <span class="material-icons-outlined text-amber-600 text-sm">security</span>
+                      <span class="text-[10px] font-black text-amber-600 uppercase tracking-widest">Security Authorization</span>
+                    </div>
+                    <h4 class="text-[13px] font-bold text-slate-900 mb-2">{{ part.permissionRequest.permission }}</h4>
+                    <p class="text-[11px] text-slate-600 mb-4">{{ part.permissionRequest.patterns?.join(', ') }}</p>
+                    
+                    <div class="flex gap-2">
+                      <button (click)="onPermissionResponse('once', part.permissionRequest.id)" 
+                              class="flex-1 h-9 bg-amber-600 text-white rounded-lg font-bold text-[11px] hover:bg-amber-700 transition-colors shadow-sm">Allow Once</button>
+                      <button (click)="onPermissionResponse('always', part.permissionRequest.id)" 
+                              class="flex-1 h-9 bg-white border border-amber-200 text-amber-700 rounded-lg font-bold text-[11px] hover:bg-amber-50 transition-colors shadow-sm">Always</button>
+                      <button (click)="onPermissionResponse('reject', part.permissionRequest.id)" 
+                              class="flex-1 h-9 bg-white border border-red-100 text-red-400 rounded-lg font-bold text-[11px] hover:bg-red-50 transition-colors">Deny</button>
+                    </div>
+                  </div>
+                }
+
+                <!-- Question Part (INTERACTIVE) -->
+                @if (part.type === 'question') {
+                  <div class="ml-12 p-5 bg-blue-50 border border-blue-100 rounded-2xl shadow-md border-l-4 border-l-blue-500">
+                    <div class="flex items-center gap-2 mb-3">
+                      <span class="material-icons-outlined text-blue-600 text-sm">help_outline</span>
+                      <span class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Decision Required</span>
+                    </div>
+                    @for (q of part.questionRequest.questions; track q.header) {
+                      <h4 class="text-[13px] font-bold text-slate-900 mb-3">{{ q.question }}</h4>
+                      <div class="flex flex-col gap-2">
+                        @for (opt of q.options; track opt.label) {
+                          <button (click)="onResponse(opt.label, part.questionRequest.id)" 
+                                  class="w-full p-3 bg-white border border-blue-200 rounded-xl text-[11px] text-left hover:bg-blue-600 hover:text-white transition-all group">
+                            <div class="font-bold mb-0.5">{{ opt.label }}</div>
+                            <div class="text-[10px] opacity-70 group-hover:text-blue-100">{{ opt.description }}</div>
+                          </button>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+
+              </div>
+            }
+
+            <!-- Typing Indicator / Cursor -->
+            @if (isBusy()) {
+              <div class="flex gap-4 ml-2 animate-fade-in">
+                <div class="flex gap-1.5 items-center bg-slate-50 px-3 py-2 rounded-full border border-slate-100 shadow-sm">
+                  <div class="w-1.5 h-1.5 bg-google-blue rounded-full animate-bounce" style="animation-delay: 0s"></div>
+                  <div class="w-1.5 h-1.5 bg-google-blue rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                  <div class="w-1.5 h-1.5 bg-google-blue rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
                 </div>
               </div>
-            </div>
+            }
           </div>
         } @else {
-          <div class="flex-1 flex flex-col items-center justify-center text-slate-300 gap-8 opacity-40">
-            <div class="idle-sonar relative w-24 h-24 rounded-full border-2 border-slate-100 flex items-center justify-center">
-              <span class="material-icons-outlined text-5xl text-slate-200">sensors</span>
-              <div class="absolute inset-0 rounded-full border-2 border-slate-200 animate-ping opacity-20"></div>
+          <!-- Idle State -->
+          <div class="flex-1 flex flex-col items-center justify-center gap-8 animate-fade-in">
+            <div class="relative">
+              <div class="w-32 h-32 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100">
+                <span class="material-icons-outlined text-6xl text-slate-200">hub</span>
+              </div>
+              <div class="absolute inset-0 rounded-full border-2 border-google-blue/10 animate-ping" style="animation-duration: 3s;"></div>
             </div>
-            <div class="flex flex-col items-center gap-2">
-              <p class="text-[11px] font-black uppercase tracking-[0.4em] text-slate-400 text-center">Neutral State<br>Waiting for Neural Injection</p>
+            <div class="text-center space-y-2">
+              <h3 class="text-xs font-black uppercase tracking-[0.4em] text-slate-400">Neural Sync Ready</h3>
+              <p class="text-[11px] text-slate-400 font-medium">Awaiting input manifest to begin processing pipeline</p>
             </div>
           </div>
         }
@@ -144,97 +183,75 @@ import { AnalyzeService } from '../analyze.service';
       height: 100%;
     }
 
-    .unit-label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 9px;
-      font-weight: 800;
-      color: #94A3B8;
-      letter-spacing: 0.1em;
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+
+    .animate-slide-up {
+      animation: slideUp 0.4s ease-out;
     }
 
-    .progress-val {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 28px;
-      font-weight: 800;
-      color: #F59E0B;
-      line-height: 1;
-      &.completed { color: #10B981; }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    .lab-progress-glow {
-      position: absolute;
-      top: 0; right: 0; bottom: 0; left: 0;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-      animation: sweep 2s infinite linear;
-    }
-
-    @keyframes sweep {
-      0% { transform: translateX(-100%); }
-      100% { transform: translateX(100%); }
-    }
-
-    .scanline {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.02) 50%);
-      background-size: 100% 4px;
-      z-index: 10;
-      pointer-events: none;
-    }
-
-    .log-text { 
-      color: #E2E8F0;
-      &.system { color: #3B82F6; font-weight: bold; }
-      &.process { color: #F59E0B; }
-      &.done { color: #10B981; font-weight: bold; }
-      &.error { color: #EF4444; }
-    }
-
-    @keyframes blink {
+    @keyframes pulse-subtle {
       0%, 100% { opacity: 1; }
-      50% { opacity: 0; }
+      50% { opacity: 0.85; }
     }
-
-    .animate-blink { animation: blink 0.8s infinite; }
-
-    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+    .animate-pulse-subtle { animation: pulse-subtle 2s infinite; }
   `]
 })
-export class ProgressMonitorComponent {
+export class ProgressMonitorComponent implements AfterViewChecked {
+  @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
+
   private readonly analyzeService = inject(AnalyzeService);
 
   readonly isAnalyzing = this.analyzeService.isAnalyzing;
   readonly progress = this.analyzeService.progress;
-  readonly logs = this.analyzeService.logs;
+  readonly parts = this.analyzeService.parts;
   readonly pendingQuestion = this.analyzeService.pendingQuestion;
   readonly pendingPermission = this.analyzeService.pendingPermission;
 
+  isBusy(): boolean {
+    return this.isAnalyzing() && this.progress() < 100;
+  }
+
+  ngAfterViewChecked() {
+    this.scrollToBottom();
+  }
+
+  private scrollToBottom(): void {
+    try {
+      if (this.scrollContainer) {
+        this.scrollContainer.nativeElement.scrollTop = this.scrollContainer.nativeElement.scrollHeight;
+      }
+    } catch(err) {}
+  }
+
   getStageName(): string {
     const p = this.progress();
-    if (this.pendingPermission()) return 'Security Action Required';
-    if (this.pendingQuestion()) return 'Waiting for User Input';
-    if (p === 0) return 'Awaiting Stage';
+    if (this.pendingPermission()) return 'Action Required: Security Guard';
+    if (this.pendingQuestion()) return 'Action Required: Knowledge Sync';
+    if (p === 0) return 'Awaiting Neural Injection';
     if (p < 20) return 'Bootstrapping Pipeline';
     if (p < 40) return 'Context Detection';
     if (p < 80) return 'Neural Refinement Loop';
-    if (p < 100) return 'Finalizing Report';
-    return 'Analysis Complete';
+    if (p < 100) return 'Finalizing Intelligence Report';
+    return 'Core Analysis Synchronized';
   }
 
-  getLogClass(log: string): string {
-    if (log.startsWith('[SYSTEM]')) return 'system';
-    if (log.startsWith('[PROCESS]') || log.startsWith('[THINK]') || log.includes('QUALITY_INDEX')) return 'process';
-    if (log.startsWith('[DONE]')) return 'done';
-    if (log.startsWith('[ERROR]') || log.startsWith('[FATAL]')) return 'error';
-    return '';
+  onResponse(label: string, questionId?: string): void {
+    this.analyzeService.respondToQuestion(label, questionId);
   }
 
-  onResponse(label: string): void {
-    this.analyzeService.respondToQuestion(label);
+  onPermissionResponse(response: 'once' | 'always' | 'reject', permissionId?: string): void {
+    this.analyzeService.respondToPermission(response, permissionId);
   }
 
-  onPermissionResponse(response: 'once' | 'always' | 'reject'): void {
-    this.analyzeService.respondToPermission(response);
+  onCancel(): void {
+    this.analyzeService.cancelAnalysis();
   }
 }

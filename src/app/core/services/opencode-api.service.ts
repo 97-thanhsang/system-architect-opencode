@@ -19,7 +19,7 @@ export interface OpenCodeToolState {
 
 export interface OpenCodePart {
   id: string;
-  type: 'text' | 'tool' | 'reasoning' | 'subtask' | 'step-start' | 'step-finish';
+  type: 'text' | 'tool' | 'reasoning' | 'subtask' | 'step-start' | 'step-finish' | 'permission' | 'question';
   text?: string;
   tool?: string;
   state?: OpenCodeToolState;
@@ -27,6 +27,8 @@ export interface OpenCodePart {
   prompt?: string;
   agent?: string;
   description?: string;
+  permissionRequest?: any;
+  questionRequest?: any;
 }
 
 export interface OpenCodeMessage {
@@ -63,10 +65,28 @@ export class OpenCodeApiService {
     });
   }
 
-  respondToPermission(sessionId: string, permissionId: string, response: string): Observable<boolean> {
-    return this.http.post<boolean>(`${this.baseUrl}/session/${sessionId}/permissions/${permissionId}`, {
-      response
+  respondToPermission(requestID: string, response: string): Observable<boolean> {
+    return this.http.post<boolean>(`${this.baseUrl}/permission/${requestID}/reply`, {
+      reply: response
     });
+  }
+
+  respondToQuestion(requestID: string, answers: string[][]): Observable<boolean> {
+    return this.http.post<boolean>(`${this.baseUrl}/question/${requestID}/reply`, {
+      answers
+    });
+  }
+
+  getPendingPermissions(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/permission`);
+  }
+
+  getPendingQuestions(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/question`);
+  }
+
+  abortSession(sessionId: string): Observable<boolean> {
+    return this.http.post<boolean>(`${this.baseUrl}/session/${sessionId}/abort`, {});
   }
 
   getEventStreamUrl(): string {
