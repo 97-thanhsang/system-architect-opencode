@@ -7,7 +7,8 @@ import {
   TuiDataListModule,
   TuiDialogModule,
   TuiDialogService,
-  TuiErrorModule
+  TuiErrorModule,
+  TuiNotificationModule
 } from '@taiga-ui/core';
 import { 
   TuiTextAreaModule, 
@@ -33,7 +34,8 @@ import { PolymorpheusContent } from '@tinkoff/ng-polymorpheus';
     TuiDataListModule,
     TuiDialogModule,
     TuiErrorModule,
-    TuiFieldErrorPipeModule
+    TuiFieldErrorPipeModule,
+    TuiNotificationModule
   ],
   template: `
     <div class="flex flex-col h-full bg-white rounded-[24px] shadow-google-soft overflow-hidden animate-fade-in border border-google-border">
@@ -60,35 +62,54 @@ import { PolymorpheusContent } from '@tinkoff/ng-polymorpheus';
           </div>
           
           <div class="flex flex-col gap-4">
-            <input #projectDir type="file" webkitdirectory (change)="onFolderSelected($event, 'project')" class="hidden" />
-            <input #saveDir type="file" webkitdirectory (change)="onFolderSelected($event, 'save')" class="hidden" />
-
-            <div (click)="projectDir.click()" 
-                 class="flex items-center justify-between p-3.5 bg-white border border-google-border rounded-xl cursor-pointer transition-all hover:border-google-blue hover:shadow-sm">
-              <div class="flex items-center gap-4 flex-1 min-w-0">
-                <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
-                  <span class="material-icons-outlined text-lg">folder</span>
-                </div>
-                <div class="flex flex-col min-w-0">
-                  <span class="text-[8px] font-bold text-google-gray uppercase leading-none mb-1">Source Path</span>
-                  <span class="text-[13px] font-medium text-slate-700 truncate">{{ projectPath() || 'Select Project Root...' }}</span>
-                </div>
+            <!-- Source Path Row -->
+            <div class="flex items-center gap-4 p-3 bg-white border rounded-xl transition-all"
+                 [class.border-red-300]="!projectPath().trim()"
+                 [class.bg-red-50]="!projectPath().trim()"
+                 [class.border-google-border]="projectPath().trim()"
+                 [class.focus-within:border-google-blue]="projectPath().trim()">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                   [class.bg-slate-100]="projectPath().trim()" [class.text-slate-500]="projectPath().trim()"
+                   [class.bg-red-100]="!projectPath().trim()" [class.text-red-500]="!projectPath().trim()">
+                <span class="material-icons-outlined text-lg">{{ projectPath().trim() ? 'folder' : 'priority_high' }}</span>
               </div>
-              <span class="material-icons-outlined text-slate-300 text-xs">edit</span>
+              <div class="flex flex-col flex-1 min-w-0">
+                <span class="text-[8px] font-bold uppercase leading-none mb-1"
+                      [class.text-google-gray]="projectPath().trim()" [class.text-red-500]="!projectPath().trim()">
+                  Source Path {{ !projectPath().trim() ? '(Required)' : '' }}
+                </span>
+                <input 
+                  [ngModel]="projectPath()" 
+                  (ngModelChange)="projectPath.set($event)"
+                  class="w-full border-none outline-none text-[13px] text-slate-700 bg-transparent p-0 font-medium"
+                  placeholder="E:/SOURCE/your-project"
+                />
+              </div>
             </div>
 
-            <div (click)="saveDir.click()" 
-                 class="flex items-center justify-between p-3.5 bg-white border border-google-border rounded-xl cursor-pointer transition-all hover:border-google-blue hover:shadow-sm">
-              <div class="flex items-center gap-4 flex-1 min-w-0">
-                <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
-                  <span class="material-icons-outlined text-lg">save</span>
-                </div>
-                <div class="flex flex-col min-w-0">
-                  <span class="text-[8px] font-bold text-google-gray uppercase leading-none mb-1">Reports Path</span>
-                  <span class="text-[12px] font-medium text-slate-700 truncate">{{ savePath() || 'Select Storage Path...' }}</span>
-                </div>
+            <!-- Output Path Row -->
+            <div class="flex items-center gap-4 p-3 bg-white border rounded-xl transition-all"
+                 [class.border-red-300]="!savePath().trim()"
+                 [class.bg-red-50]="!savePath().trim()"
+                 [class.border-google-border]="savePath().trim()"
+                 [class.focus-within:border-google-blue]="savePath().trim()">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                   [class.bg-slate-100]="savePath().trim()" [class.text-slate-500]="savePath().trim()"
+                   [class.bg-red-100]="!savePath().trim()" [class.text-red-500]="!savePath().trim()">
+                <span class="material-icons-outlined text-lg">{{ savePath().trim() ? 'save' : 'priority_high' }}</span>
               </div>
-              <span class="material-icons-outlined text-slate-300 text-xs">edit</span>
+              <div class="flex flex-col flex-1 min-w-0">
+                <span class="text-[8px] font-bold uppercase leading-none mb-1"
+                      [class.text-google-gray]="savePath().trim()" [class.text-red-500]="!savePath().trim()">
+                  Reports Path {{ !savePath().trim() ? '(Required)' : '' }}
+                </span>
+                <input 
+                  [ngModel]="savePath()" 
+                  (ngModelChange)="savePath.set($event)"
+                  class="w-full border-none outline-none text-[13px] text-slate-700 bg-transparent p-0 font-medium"
+                  placeholder="E:/SOURCE/your-project/reports"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -100,7 +121,7 @@ import { PolymorpheusContent } from '@tinkoff/ng-polymorpheus';
             <span class="text-[10px] font-bold text-google-gray uppercase tracking-widest">02. DATA INJECTION UNIT</span>
           </div>
 
-          <div class="flex-1 flex flex-col bg-slate-100/50 rounded-xl border border-slate-200 overflow-hidden">
+          <div class="flex-1 flex flex-col bg-slate-100/50 rounded-xl border border-slate-200 overflow-hidden shadow-inner">
             <div class="h-11 bg-slate-50 px-4 flex items-center gap-5 border-b border-slate-200">
               <button class="h-full border-b-2 font-bold text-[10px] tracking-wider transition-all" 
                       [class.border-google-blue]="activeTab === 0" [class.text-google-blue]="activeTab === 0"
@@ -116,7 +137,7 @@ import { PolymorpheusContent } from '@tinkoff/ng-polymorpheus';
                       (click)="activeTab = 2">REMOTE_BROWSE</button>
             </div>
 
-            <div class="flex-1 flex flex-col p-5 bg-white">
+            <div class="flex-1 flex flex-col p-5 bg-white overflow-hidden">
               @if (activeTab === 0) {
                 <div class="flex flex-col h-full animate-fade-in">
                   <div class="flex-1 border-[1.5px] border-slate-200 rounded-xl p-3 bg-slate-50/30 focus-within:border-google-blue focus-within:ring-4 focus-within:ring-blue-50 transition-all">
@@ -138,7 +159,7 @@ import { PolymorpheusContent } from '@tinkoff/ng-polymorpheus';
 
               @if (activeTab === 1) {
                 <div class="flex flex-col animate-fade-in py-2">
-                  <div class="flex items-center gap-3 h-12 px-4 border-[1.5px] border-slate-200 rounded-xl bg-white focus-within:border-google-blue transition-all mb-4">
+                  <div class="flex items-center gap-3 h-12 px-4 border-[1.5px] border-slate-200 rounded-xl bg-white focus-within:border-google-blue transition-all mb-4 shadow-sm">
                     <span class="material-icons-outlined text-slate-400">link</span>
                     <input 
                       [ngModel]="jiraUrl()" 
@@ -205,22 +226,28 @@ import { PolymorpheusContent } from '@tinkoff/ng-polymorpheus';
                       <span class="material-icons-outlined text-sm">close</span>
                     </button>
                   </div>
-                  <div class="text-[11px] text-google-gray truncate break-all">{{ item.content }}</div>
+                  <div class="text-[11px] text-google-gray truncate break-all leading-normal">{{ item.content }}</div>
                 </div>
               </div>
             } @empty {
-              <div class="flex-1 flex flex-col items-center justify-center py-10 opacity-30 border border-dashed border-slate-200 rounded-2xl bg-white">
-                 <span class="material-icons-outlined text-2xl mb-1 text-slate-400">playlist_add</span>
-                 <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Awaiting Stage</span>
+              <div class="flex-1 flex flex-col items-center justify-center py-10 border border-dashed border-red-200 rounded-2xl bg-red-50/30 animate-pulse">
+                 <span class="material-icons-outlined text-2xl mb-1 text-red-300">playlist_add</span>
+                 <span class="text-[10px] font-bold uppercase tracking-widest text-red-400">At least one unit required</span>
               </div>
             }
           </div>
         </div>
 
         <!-- ── ACTION: EXECUTION COMMIT ──── -->
-        <div class="mt-2 flex justify-center">
+        <div class="mt-2 flex flex-col items-center gap-3">
+          @if (!canSubmit()) {
+            <p class="text-[10px] font-bold text-red-400 uppercase tracking-wider animate-fade-in flex items-center gap-1.5">
+              <span class="material-icons-outlined text-sm">info</span>
+              Complete all required fields & stage at least one unit
+            </p>
+          }
           <button
-            class="h-10 px-10 bg-google-blue text-white text-[11px] font-bold rounded-full shadow-google-soft hover:bg-google-blue-dark hover:shadow-google-hover hover:-translate-y-px active:translate-y-0 transition-all uppercase tracking-[0.1em]"
+            class="h-10 px-10 bg-google-blue text-white text-[11px] font-bold rounded-full shadow-google-soft hover:bg-google-blue-dark hover:shadow-google-hover hover:-translate-y-px active:translate-y-0 transition-all uppercase tracking-[0.1em] disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed"
             [disabled]="isAnalyzing() || !canSubmit()"
             (click)="onExecute()"
           >
@@ -295,17 +322,7 @@ export class TaskInputComponent {
   }
 
   onFolderSelected(event: any, type: 'project' | 'save'): void {
-    const files = event.target.files;
-    if (files && files.length > 0) {
-      const firstPath = files[0].webkitRelativePath;
-      const folderName = firstPath.split('/')[0];
-      const mockPath = `E:/SOURCE/${folderName}`;
-      
-      if (type === 'project') this.projectPath.set(mockPath);
-      else this.savePath.set(mockPath);
-      
-      event.target.value = '';
-    }
+    // Standard folder selection disabled for UX stability
   }
 
   addText(): void {
@@ -364,7 +381,9 @@ export class TaskInputComponent {
   }
 
   onExecute(): void {
-    this.analyzeService.updatePaths(this.projectPath(), this.savePath());
-    this.analyzeService.startAnalysis();
+    if (this.canSubmit()) {
+      this.analyzeService.updatePaths(this.projectPath(), this.savePath());
+      this.analyzeService.startAnalysis();
+    }
   }
 }
