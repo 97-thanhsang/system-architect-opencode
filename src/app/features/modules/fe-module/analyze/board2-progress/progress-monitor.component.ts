@@ -32,6 +32,39 @@ import { AnalyzeService } from '../analyze.service';
         <div class="absolute inset-0 opacity-[0.03] pointer-events-none" 
              style="background-image: radial-gradient(#64748b 0.5px, transparent 0.5px); background-size: 20px 20px;"></div>
 
+        <!-- Floating Security Guard Overlay (Critical Priority) -->
+        @if (pendingPermission(); as perm) {
+          <div class="absolute inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md animate-fade-in">
+            <div class="w-full max-w-[320px] bg-white rounded-[28px] shadow-2xl border border-amber-200 overflow-hidden animate-slide-up">
+              <div class="p-8 text-center">
+                <div class="w-16 h-16 rounded-3xl bg-amber-50 flex items-center justify-center text-amber-600 border border-amber-100 mx-auto mb-5 shadow-inner">
+                  <span class="material-icons-outlined text-3xl animate-pulse">security</span>
+                </div>
+                <h3 class="text-lg font-bold text-slate-900 mb-2">Security Authorization</h3>
+                <p class="text-[12px] text-slate-500 mb-1 font-medium">Agent is requesting access to:</p>
+                <div class="px-3 py-1.5 bg-slate-50 rounded-lg mb-6 border border-slate-100">
+                  <span class="text-[11px] font-mono font-bold text-amber-700 break-all">{{ perm.tool }}</span>
+                </div>
+                
+                <div class="flex flex-col gap-2">
+                  <button (click)="onPermissionResponse('once', perm.id)" 
+                          class="h-11 bg-amber-600 text-white rounded-xl font-bold text-sm hover:bg-amber-700 transition-all shadow-md active:scale-95">
+                    Allow Once
+                  </button>
+                  <button (click)="onPermissionResponse('always', perm.id)" 
+                          class="h-11 bg-white border-2 border-amber-600 text-amber-600 rounded-xl font-bold text-sm hover:bg-amber-50 transition-all active:scale-95">
+                    Always Allow
+                  </button>
+                  <button (click)="onPermissionResponse('reject', perm.id)" 
+                          class="h-11 text-slate-400 font-bold text-sm hover:text-red-500 transition-colors">
+                    Deny Request
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
         @if (isAnalyzing() || progress() > 0) {
           <!-- Progress Header Overlay -->
           <div class="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-slate-100 px-6 py-4">
@@ -236,10 +269,15 @@ export class ProgressMonitorComponent implements AfterViewChecked {
     if (this.pendingPermission()) return 'Action Required: Security Guard';
     if (this.pendingQuestion()) return 'Action Required: Knowledge Sync';
     if (p === 0) return 'Awaiting Neural Injection';
-    if (p < 20) return 'Bootstrapping Pipeline';
-    if (p < 40) return 'Context Detection';
-    if (p < 80) return 'Neural Refinement Loop';
-    if (p < 100) return 'Finalizing Intelligence Report';
+    if (p < 10) return 'Step 0: Skill Initialization';
+    if (p < 20) return 'Phase A: Quick Start';
+    if (p < 30) return 'Phase B: Classification';
+    if (p < 40) return 'Phase C: Business Analysis';
+    if (p < 55) return 'Phase D: Tech Specification';
+    if (p < 65) return 'Phase E: Estimation';
+    if (p < 80) return 'Phase F: Impact & Risk';
+    if (p < 90) return 'Phase G: Actionable Items';
+    if (p < 100) return 'Phase H: Pre-flight Gate';
     return 'Core Analysis Synchronized';
   }
 

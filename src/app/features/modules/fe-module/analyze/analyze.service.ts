@@ -93,7 +93,7 @@ export class AnalyzeService {
   }
 
   async respondToPermission(response: 'once' | 'always' | 'reject', permissionId?: string): Promise<void> {
-    const { sessionId, pendingPermission, parts } = this._state();
+    const { sessionId, pendingPermission, projectPath } = this._state();
     const targetId = permissionId || pendingPermission?.id;
     if (!sessionId || !targetId) return;
     
@@ -107,14 +107,14 @@ export class AnalyzeService {
     }));
 
     try {
-      await firstValueFrom(this.opencodeApi.respondToPermission(targetId, response));
+      await firstValueFrom(this.opencodeApi.respondToPermission(targetId, response, projectPath));
     } catch (err: any) {
       this.addLog(`[ERROR] FAILED TO SEND PERMISSION: ${err.message}`);
     }
   }
 
   async respondToQuestion(optionLabel: string, questionId?: string): Promise<void> {
-    const { sessionId, pendingQuestion } = this._state();
+    const { sessionId, pendingQuestion, projectPath } = this._state();
     const targetId = questionId || pendingQuestion?.id;
     if (!sessionId || !targetId) return;
 
@@ -128,7 +128,7 @@ export class AnalyzeService {
 
     try {
       // OpenCode expects answers: string[][] where each inner array is selected options for one question
-      await firstValueFrom(this.opencodeApi.respondToQuestion(targetId, [[optionLabel]]));
+      await firstValueFrom(this.opencodeApi.respondToQuestion(targetId, [[optionLabel]], projectPath));
     } catch (err: any) {
       this.addLog(`[ERROR] FAILED TO SEND RESPONSE: ${err.message}`);
     }
@@ -154,26 +154,46 @@ export class AnalyzeService {
 
   async startAnalysis(): Promise<void> {
     const { projectPath, savePath, inputs } = this._state();
-    if (!projectPath || inputs.length === 0) return;
+    
     this._state.update(s => ({
-      ...s, status: 'analyzing', progress: 0, logs: ['[SYSTEM] INITIALIZING OPENCODE NATIVE BRIDGE...'], parts: [], currentTool: null,
+      ...s, status: 'analyzing', progress: 0, logs: ['[SYSTEM] PREPARING OPENCODE COMMAND DISPATCHER...'], parts: [], currentTool: null,
       activeSubtasks: [], pendingQuestion: null, pendingPermission: null, result: null, error: null
     }));
+
     try {
       const session = await firstValueFrom(this.opencodeApi.createSession('System Architect Analysis'));
       this._state.update(s => ({ ...s, sessionId: session.id }));
       this.addLog(`[SYSTEM] SESSION_ESTABLISHED: ${session.id}`);
       this.setupNativeEventListeners(session.id);
+      
       this.addLog(`[CONTEXT] MOUNTING DIRECTORY: ${projectPath}`);
+      // Ensure we are in the right directory first (Standard Shell Command)
       await firstValueFrom(this.opencodeApi.runShellCommand(session.id, `cd "${projectPath}"`, 'analyze'));
-      const payload = inputs.map(i => `[${i.type}] ${i.label || 'DATA'}: ${i.content}`).join('\n\n');
-      let args = `"${payload}"`;
-      if (savePath) args += ` --save="${savePath}"`;
-      this.addLog(`[COMMAND] INVOKING: analyze-task`);
-      await firstValueFrom(this.opencodeApi.executeCommand(session.id, 'analyze-task', args));
+
+      // If manifest is empty, run the interactive /analyze command to fetch from Jira
+      if (inputs.length === 0) {
+        this.addLog(`[COMMAND] INVOKING NATIVE: /analyze`);
+        // We use direct mode flags to bypass path questions if already provided in UI
+        const args = `--projects:${projectPath} --savePath:${savePath}`;
+        await firstValueFrom(this.opencodeApi.executeCommand(session.id, 'analyze', args));
+        return;
+      }
+
+      // If manifest has inputs, invoke /analyze-task for each item
+      // This uses the exact logic from your commands/workflows/analyze-task.md
+      for (const input of inputs) {
+        const taskRef = input.type === 'text' ? `"${input.content}"` : input.content;
+        
+        // Exact syntax from your config: --projects:[PATH] --savePath:[PATH]
+        const args = `${taskRef} --projects:${projectPath} --savePath:${savePath}`;
+        
+        this.addLog(`[COMMAND] DISPATCHING: /analyze-task ${input.label || ''}`);
+        await firstValueFrom(this.opencodeApi.executeCommand(session.id, 'analyze-task', args));
+      }
+      
     } catch (err: any) {
       this._state.update(s => ({ ...s, status: 'error', error: err.message }));
-      this.addLog(`[FATAL] CONNECTION ERROR: ${err.message}`);
+      this.addLog(`[FATAL] PIPELINE ERROR: ${err.message}`);
     }
   }
 
@@ -188,21 +208,23 @@ export class AnalyzeService {
     eventSource.onmessage = (event) => {
       try {
         const nativeEvent = JSON.parse(event.data);
-        console.log('[SSE] Received:', nativeEvent.type, nativeEvent);
-        
         const props = nativeEvent.properties;
         
-        // Filter events for this session
-        const currentSessionId = props.sessionID || props.sessionId;
-        if (currentSessionId && currentSessionId !== sessionId) {
-           return;
-        }
+        // Robust session filtering
+        const eventSessionId = props?.sessionID || props?.sessionId || nativeEvent.sessionId || nativeEvent.sessionID;
+        
+        // If event has a session ID, it MUST match ours. 
+        // If it doesn't have one (global event), we process it only if it's relevant.
+        if (eventSessionId && eventSessionId !== sessionId) return;
+
+        console.log(`[SSE] Match Found (${nativeEvent.type}):`, nativeEvent);
 
         switch (nativeEvent.type) {
           case 'message.part.updated': 
             this.handlePartUpdate(props.part); 
             break;
           case 'permission.asked': 
+            console.warn('[SECURITY] Permission Event Detected!', props);
             this.handlePermissionAsked(props); 
             break;
           case 'question.asked':
@@ -236,12 +258,13 @@ export class AnalyzeService {
   }
 
   private async syncPendingItems(sessionId: string): Promise<void> {
+    const { projectPath } = this._state();
     try {
-      const permissions = await firstValueFrom(this.opencodeApi.getPendingPermissions());
+      const permissions = await firstValueFrom(this.opencodeApi.getPendingPermissions(projectPath));
       const myPermissions = permissions.filter(p => p.sessionID === sessionId);
       myPermissions.forEach(p => this.handlePermissionAsked(p));
 
-      const questions = await firstValueFrom(this.opencodeApi.getPendingQuestions());
+      const questions = await firstValueFrom(this.opencodeApi.getPendingQuestions(projectPath));
       const myQuestions = questions.filter(q => q.sessionID === sessionId);
       myQuestions.forEach(q => this.handleQuestionAsked(q));
     } catch (e) {}

@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export interface OpenCodeSession {
@@ -47,6 +47,14 @@ export class OpenCodeApiService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = 'http://localhost:5678';
 
+  private getHeaders(directory?: string): HttpHeaders {
+    let headers = new HttpHeaders();
+    if (directory) {
+      headers = headers.set('x-opencode-directory', directory);
+    }
+    return headers;
+  }
+
   createSession(title?: string): Observable<OpenCodeSession> {
     return this.http.post<OpenCodeSession>(`${this.baseUrl}/session`, { title });
   }
@@ -65,24 +73,30 @@ export class OpenCodeApiService {
     });
   }
 
-  respondToPermission(requestID: string, response: string): Observable<boolean> {
-    return this.http.post<boolean>(`${this.baseUrl}/permission/${requestID}/reply`, {
-      reply: response
-    });
+  respondToPermission(requestID: string, response: string, directory?: string): Observable<boolean> {
+    return this.http.post<boolean>(`${this.baseUrl}/permission/${requestID}/reply`, 
+      { reply: response }, 
+      { headers: this.getHeaders(directory) }
+    );
   }
 
-  respondToQuestion(requestID: string, answers: string[][]): Observable<boolean> {
-    return this.http.post<boolean>(`${this.baseUrl}/question/${requestID}/reply`, {
-      answers
-    });
+  respondToQuestion(requestID: string, answers: string[][], directory?: string): Observable<boolean> {
+    return this.http.post<boolean>(`${this.baseUrl}/question/${requestID}/reply`, 
+      { answers }, 
+      { headers: this.getHeaders(directory) }
+    );
   }
 
-  getPendingPermissions(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/permission`);
+  getPendingPermissions(directory?: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/permission`, 
+      { headers: this.getHeaders(directory) }
+    );
   }
 
-  getPendingQuestions(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/question`);
+  getPendingQuestions(directory?: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/question`, 
+      { headers: this.getHeaders(directory) }
+    );
   }
 
   abortSession(sessionId: string): Observable<boolean> {
