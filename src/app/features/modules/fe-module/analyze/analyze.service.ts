@@ -71,6 +71,16 @@ export class AnalyzeService {
   }
 
   /**
+   * Clears all inputs
+   */
+  clearInputs(): void {
+    this._state.update(s => ({
+      ...s,
+      inputs: []
+    }));
+  }
+
+  /**
    * Starts the analysis process
    */
   startAnalysis(): void {
