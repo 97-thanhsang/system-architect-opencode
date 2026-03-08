@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TuiProgressModule } from '@taiga-ui/kit';
 import { AnalyzeService } from '../analyze.service';
@@ -11,7 +11,7 @@ import { AnalyzeService } from '../analyze.service';
     TuiProgressModule
   ],
   template: `
-    <div class="g-card h-full flex flex-col shadow-sm">
+    <div class="g-card h-full flex flex-col shadow-sm border-0 bg-white">
       <!-- Card Header -->
       <div class="g-card__header">
         <div class="flex items-center gap-3">
@@ -19,9 +19,9 @@ import { AnalyzeService } from '../analyze.service';
             <span class="material-icons-outlined" style="font-size: 20px;">memory</span>
           </div>
           <div class="flex flex-col">
-            <span class="g-card__title">Processing Unit</span>
+            <span class="g-card__title">Neural Processing Unit</span>
             <span style="font-size: 11px; color: #80868b; font-weight: 500; text-transform: uppercase; letter-spacing: 0.02em;">
-               Real-time execution stream
+               OpenCode Receival Pipeline
             </span>
           </div>
         </div>
@@ -29,61 +29,109 @@ import { AnalyzeService } from '../analyze.service';
       
       <div class="g-card__body flex-1 flex flex-col px-6 py-6 overflow-hidden">
         @if (isAnalyzing() || progress() > 0) {
-          <!-- Progress Visualization -->
+          <!-- Neural Progress Visualization -->
           <div class="mb-8">
-            <div class="flex justify-between items-end mb-3">
+            <div class="flex justify-between items-end mb-3 px-1">
               <div class="flex flex-col">
-                <span class="unit-label mb-1">ANALYSIS THROUGHPUT</span>
-                <span class="text-[10px] font-extrabold text-[#94A3B8] tracking-widest uppercase">
-                   NEURAL-ENGINE-V2 // ACTIVE
+                <span class="unit-label mb-1">PIPELINE THROUGHPUT</span>
+                <span class="text-[10px] font-extrabold text-google-blue tracking-widest uppercase animate-pulse">
+                   {{ getStageName() }}
                 </span>
               </div>
               <div class="flex flex-col items-end">
-                <span class="progress-val">{{ progress() }}%</span>
+                <span class="progress-val" [class.completed]="progress() === 100">{{ progress() }}%</span>
               </div>
             </div>
-            <div class="lab-progress-container shadow-inner">
-              <div class="lab-progress-fill" [style.width.%]="progress()">
+            <div class="lab-progress-container shadow-inner bg-slate-100 rounded-full overflow-hidden h-2.5">
+              <div class="lab-progress-fill h-full transition-all duration-500 rounded-full" 
+                   [style.width.%]="progress()"
+                   [ngClass]="progress() === 100 ? 'bg-green-500' : 'bg-amber-500'">
                 <div class="lab-progress-glow"></div>
               </div>
             </div>
           </div>
 
-          <!-- Terminal Module -->
-          <div class="terminal-module flex-1 flex flex-col min-h-0">
-            <div class="terminal-header">
-              <div class="flex gap-2">
-                <div class="dot red"></div>
-                <div class="dot yellow"></div>
-                <div class="dot green"></div>
+          <!-- Interactive Question Layer -->
+          @if (pendingQuestion(); as question) {
+            <div class="mb-6 animate-slide-in">
+              <div class="p-5 bg-blue-50 border border-blue-100 rounded-2xl shadow-sm">
+                <div class="flex items-center gap-2 mb-3">
+                  <span class="material-icons-outlined text-blue-600 text-sm">help_outline</span>
+                  <span class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Decision Required</span>
+                </div>
+                <h3 class="text-sm font-bold text-slate-900 mb-4">{{ question.title }}</h3>
+                <div class="flex flex-wrap gap-3">
+                  @for (opt of question.options; track opt.label) {
+                    <button (click)="onResponse(opt.label)" 
+                            class="px-4 py-2 bg-white border border-blue-200 rounded-xl text-[11px] font-bold text-blue-700 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shadow-sm">
+                      {{ opt.label }}
+                    </button>
+                  }
+                </div>
               </div>
-              <div class="terminal-title">AGENT_CORE_LOG_STREAM</div>
-              <div class="terminal-meta">ENCRYPTED</div>
+            </div>
+          }
+
+          <!-- Floating Security Guard -->
+          @if (pendingPermission(); as perm) {
+            <div class="absolute inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
+              <div class="w-full max-w-sm bg-white rounded-[28px] shadow-2xl border border-slate-200 overflow-hidden">
+                <div class="p-8 text-center">
+                  <div class="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600 border border-amber-100 mx-auto mb-4">
+                    <span class="material-icons-outlined text-2xl">security</span>
+                  </div>
+                  <h3 class="text-lg font-bold text-slate-900 mb-2">Permission Required</h3>
+                  <p class="text-sm text-slate-600 mb-8">{{ perm.title }}</p>
+                  
+                  <div class="flex flex-col gap-2">
+                    <button (click)="onPermissionResponse('once')" class="h-11 bg-google-blue text-white rounded-xl font-bold text-sm">Allow Once</button>
+                    <button (click)="onPermissionResponse('always')" class="h-11 bg-white border border-google-blue text-google-blue rounded-xl font-bold text-sm">Always Allow</button>
+                    <button (click)="onPermissionResponse('reject')" class="h-11 text-slate-400 font-bold text-sm">Deny</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- OpenCode Terminal Module -->
+          <div class="terminal-module flex-1 flex flex-col min-h-0 rounded-2xl overflow-hidden border border-slate-200 bg-[#0F172A] shadow-2xl">
+            <div class="terminal-header h-9 bg-[#1E293B] px-4 flex items-center justify-between">
+              <div class="flex gap-1.5">
+                <div class="w-2.5 h-2.5 rounded-full bg-[#FF5F57]"></div>
+                <div class="w-2.5 h-2.5 rounded-full bg-[#FFBD2E]"></div>
+                <div class="w-2.5 h-2.5 rounded-full bg-[#28C840]"></div>
+              </div>
+              <div class="terminal-title font-mono text-[9px] text-slate-400 tracking-[0.2em] font-bold">AGENT_CORE_LOG_STREAM</div>
+              <div class="terminal-meta font-mono text-[8px] text-slate-500 bg-[#0F172A] px-2 py-0.5 rounded border border-white/5">SSL_ENCRYPTED</div>
             </div>
             
-            <div class="terminal-body flex-1 overflow-auto p-4 custom-scrollbar">
+            <div class="terminal-body flex-1 overflow-auto p-5 custom-scrollbar relative">
               <div class="scanline"></div>
               @for (log of logs(); track $index) {
-                <div class="log-entry animate-fade-in">
-                  <span class="log-ts">[{{ $index + 1 | number:'2.0-0' }}]</span>
-                  <span class="log-cursor">_</span>
-                  <span class="log-text">{{ log }}</span>
+                <div class="log-entry animate-fade-in group mb-1.5 flex gap-4 font-mono text-[11px] leading-relaxed">
+                  <span class="log-ts text-slate-600 font-bold shrink-0">[{{ $index + 1 | number:'2.0-0' }}]</span>
+                  <div class="flex-1 min-w-0">
+                    <span class="log-text" [ngClass]="getLogClass(log)">{{ log }}</span>
+                  </div>
                 </div>
               }
-              <div class="cursor-line">
-                <span class="log-ts">[{{ logs().length + 1 | number:'2.0-0' }}]</span>
-                <span class="log-cursor">_</span>
-                <div class="typing-cursor"></div>
+              <div class="cursor-line flex gap-4 font-mono text-[11px] items-center mt-2">
+                <span class="log-ts text-slate-600 font-bold shrink-0">[{{ logs().length + 1 | number:'2.0-0' }}]</span>
+                <div class="flex items-center gap-2">
+                   <span class="text-google-blue font-black animate-pulse">></span>
+                   <div class="w-2 h-4 bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)] animate-blink"></div>
+                </div>
               </div>
             </div>
           </div>
         } @else {
-          <div class="flex-1 flex flex-col items-center justify-center text-[#CBD5E1] gap-6 opacity-40">
-            <div class="idle-ring">
-              <span class="material-icons-outlined text-5xl">sensors</span>
+          <div class="flex-1 flex flex-col items-center justify-center text-slate-300 gap-8 opacity-40">
+            <div class="idle-sonar relative w-24 h-24 rounded-full border-2 border-slate-100 flex items-center justify-center">
+              <span class="material-icons-outlined text-5xl text-slate-200">sensors</span>
+              <div class="absolute inset-0 rounded-full border-2 border-slate-200 animate-ping opacity-20"></div>
             </div>
             <div class="flex flex-col items-center gap-2">
-              <p class="text-[11px] font-extrabold uppercase tracking-[0.3em]">Awaiting Signal Input</p>
+              <p class="text-[11px] font-black uppercase tracking-[0.4em] text-slate-400 text-center">Neutral State<br>Waiting for Neural Injection</p>
             </div>
           </div>
         }
@@ -98,9 +146,9 @@ import { AnalyzeService } from '../analyze.service';
 
     .unit-label {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
+      font-size: 9px;
       font-weight: 800;
-      color: #ADB5BD;
+      color: #94A3B8;
       letter-spacing: 0.1em;
     }
 
@@ -110,29 +158,14 @@ import { AnalyzeService } from '../analyze.service';
       font-weight: 800;
       color: #F59E0B;
       line-height: 1;
-    }
-
-    .lab-progress-container {
-      height: 10px;
-      background: #F1F3F4;
-      border-radius: 5px;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .lab-progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #F59E0B, #FBBF24);
-      border-radius: 5px;
-      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
+      &.completed { color: #10B981; }
     }
 
     .lab-progress-glow {
       position: absolute;
       top: 0; right: 0; bottom: 0; left: 0;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-      animation: sweep 1.5s infinite linear;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      animation: sweep 2s infinite linear;
     }
 
     @keyframes sweep {
@@ -140,87 +173,21 @@ import { AnalyzeService } from '../analyze.service';
       100% { transform: translateX(100%); }
     }
 
-    .terminal-module {
-      background: #0F172A;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-      border: 1px solid #1E293B;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .terminal-header {
-      height: 36px;
-      background: #1E293B;
-      display: flex;
-      align-items: center;
-      padding: 0 16px;
-      justify-content: space-between;
-    }
-
-    .dot { width: 8px; height: 8px; border-radius: 50%; }
-    .dot.red { background: #FF5F57; }
-    .dot.yellow { background: #FFBD2E; }
-    .dot.green { background: #28C840; }
-
-    .terminal-title {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 9px;
-      color: #94A3B8;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-    }
-
-    .terminal-meta {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 8px;
-      color: #475569;
-      font-weight: 700;
-      background: #0F172A;
-      padding: 2px 6px;
-      border-radius: 4px;
-    }
-
-    .terminal-body {
-      position: relative;
-      background: radial-gradient(circle at center, #1E293B 0%, #0F172A 100%);
-    }
-
     .scanline {
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.1) 50%);
+      background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.02) 50%);
       background-size: 100% 4px;
       z-index: 10;
       pointer-events: none;
-      opacity: 0.1;
     }
 
-    .log-entry {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 6px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      line-height: 1.5;
-    }
-
-    .log-ts { color: #475569; font-weight: 700; }
-    .log-cursor { color: #3B82F6; font-weight: 800; opacity: 0.7; }
-    .log-text { color: #CBD5E1; }
-
-    .cursor-line {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .typing-cursor {
-      width: 7px;
-      height: 13px;
-      background: #10B981;
-      animation: blink 0.8s infinite;
-      box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+    .log-text { 
+      color: #E2E8F0;
+      &.system { color: #3B82F6; font-weight: bold; }
+      &.process { color: #F59E0B; }
+      &.done { color: #10B981; font-weight: bold; }
+      &.error { color: #EF4444; }
     }
 
     @keyframes blink {
@@ -228,33 +195,10 @@ import { AnalyzeService } from '../analyze.service';
       50% { opacity: 0; }
     }
 
-    .idle-ring {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      border: 3px solid #F1F3F4;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      &::after {
-        content: '';
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        border-radius: 50%;
-        border: 2px solid #E2E8F0;
-        animation: sonar 2.5s infinite cubic-bezier(0.4, 0, 0.2, 1);
-      }
-    }
-
-    @keyframes sonar {
-      0% { transform: scale(0.9); opacity: 0.8; }
-      100% { transform: scale(1.6); opacity: 0; }
-    }
+    .animate-blink { animation: blink 0.8s infinite; }
 
     .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #1E293B; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
   `]
 })
 export class ProgressMonitorComponent {
@@ -263,4 +207,34 @@ export class ProgressMonitorComponent {
   readonly isAnalyzing = this.analyzeService.isAnalyzing;
   readonly progress = this.analyzeService.progress;
   readonly logs = this.analyzeService.logs;
+  readonly pendingQuestion = this.analyzeService.pendingQuestion;
+  readonly pendingPermission = this.analyzeService.pendingPermission;
+
+  getStageName(): string {
+    const p = this.progress();
+    if (this.pendingPermission()) return 'Security Action Required';
+    if (this.pendingQuestion()) return 'Waiting for User Input';
+    if (p === 0) return 'Awaiting Stage';
+    if (p < 20) return 'Bootstrapping Pipeline';
+    if (p < 40) return 'Context Detection';
+    if (p < 80) return 'Neural Refinement Loop';
+    if (p < 100) return 'Finalizing Report';
+    return 'Analysis Complete';
+  }
+
+  getLogClass(log: string): string {
+    if (log.startsWith('[SYSTEM]')) return 'system';
+    if (log.startsWith('[PROCESS]') || log.startsWith('[THINK]') || log.includes('QUALITY_INDEX')) return 'process';
+    if (log.startsWith('[DONE]')) return 'done';
+    if (log.startsWith('[ERROR]') || log.startsWith('[FATAL]')) return 'error';
+    return '';
+  }
+
+  onResponse(label: string): void {
+    this.analyzeService.respondToQuestion(label);
+  }
+
+  onPermissionResponse(response: 'once' | 'always' | 'reject'): void {
+    this.analyzeService.respondToPermission(response);
+  }
 }
