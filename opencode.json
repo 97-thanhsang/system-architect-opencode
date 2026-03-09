@@ -61,7 +61,7 @@
       "type": "local",
       "command": [
         "node",
-        "C:/Users/My PC/.config/opencode/.mcp/jira-server/dist/index.js"
+        "C:/Users/THANHSANG/.config/opencode/.mcp/jira-server/dist/index.js"
       ],
       "environment": {
         "JIRA_URL": "https://task.ascvn.com.vn",

@@ -1,6 +1,23 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AnalyzeService } from '../analyze.service';
+
+// ============================================================
+// EXPORT OPTIONS - Phase 3 Enhancement
+// ============================================================
+interface ExportOptions {
+  format: 'markdown' | 'json' | 'pdf';
+  filename?: string;
+  includeMetadata?: boolean;
+}
+
+// ============================================================
+// ADOPT OPTIONS - Phase 3 Enhancement  
+// ============================================================
+interface AdoptOptions {
+  action: 'create-task' | 'create-branch' | 'create-pr';
+  targetProject?: string;
+}
 
 @Component({
   selector: 'app-output-viewer',
@@ -34,7 +51,7 @@ import { AnalyzeService } from '../analyze.service';
                 <span class="unit-label">SYSTEM_IMPACT_REPORT.md</span>
               </div>
               <div class="flex gap-1.5">
-                <button class="tool-btn" title="Copy to Clipboard">
+                <button (click)="copyToClipboard()" class="tool-btn" title="Copy to Clipboard">
                   <span class="material-icons-outlined">content_copy</span>
                 </button>
                 <button class="tool-btn" title="Toggle Fullscreen">
@@ -60,11 +77,11 @@ import { AnalyzeService } from '../analyze.service';
           </div>
 
           <div class="mt-6 flex gap-3">
-            <button class="g-btn g-btn--outlined flex-1" style="height: 48px;">
+            <button (click)="exportResult('markdown')" class="g-btn g-btn--outlined flex-1" style="height: 48px;">
               <span class="material-icons-outlined">download</span>
               EXPORT PACKAGE
             </button>
-            <button class="g-btn g-btn--primary flex-1" style="height: 48px;">
+            <button (click)="adoptSolution('create-task')" class="g-btn g-btn--primary flex-1" style="height: 48px;">
               <span class="material-icons-outlined">check_circle</span>
               ADOPT SOLUTION
             </button>
@@ -147,4 +164,105 @@ import { AnalyzeService } from '../analyze.service';
 export class OutputViewerComponent {
   private readonly analyzeService = inject(AnalyzeService);
   readonly result = this.analyzeService.result;
+
+  // ============================================================
+  // EXPORT FUNCTIONALITY - Phase 3 Enhancement
+  // ============================================================
+  async exportResult(format: 'markdown' | 'json' | 'pdf' = 'markdown'): Promise<void> {
+    const content = this.result();
+    if (!content) return;
+
+    let exportContent: string;
+    let mimeType: string;
+    let extension: string;
+
+    switch (format) {
+      case 'markdown':
+        exportContent = content;
+        mimeType = 'text/markdown';
+        extension = 'md';
+        break;
+      case 'json':
+        exportContent = JSON.stringify({
+          result: content,
+          metadata: {
+            exportedAt: new Date().toISOString(),
+            projectPath: this.analyzeService.state().projectPath
+          }
+        }, null, 2);
+        mimeType = 'application/json';
+        extension = 'json';
+        break;
+      case 'pdf':
+        // For PDF, we'll use the browser's print functionality
+        window.print();
+        return;
+    }
+
+    this.downloadFile(exportContent, `analysis-report.${extension}`, mimeType);
+  }
+
+  private downloadFile(content: string, filename: string, mimeType: string): void {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ============================================================
+  // COPY TO CLIPBOARD - Phase 3 Enhancement
+  // ============================================================
+  async copyToClipboard(): Promise<void> {
+    const content = this.result();
+    if (!content) return;
+
+    try {
+      await navigator.clipboard.writeText(content);
+      // Could add a toast notification here
+      console.log('📋 Content copied to clipboard');
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  }
+
+  // ============================================================
+  // ADOPT SOLUTION - Phase 3 Enhancement
+  // ============================================================
+  async adoptSolution(action: 'create-task' | 'create-branch' | 'create-pr' = 'create-task'): Promise<void> {
+    const content = this.result();
+    if (!content) return;
+
+    const parsed = this.parseAnalysisResult(content);
+
+    switch (action) {
+      case 'create-task':
+        // TODO: Integrate with Jira MCP to create task
+        console.log('📋 Creating Jira task from analysis...');
+        alert('Jira task creation will be integrated with Jira MCP');
+        break;
+      case 'create-branch':
+        // TODO: Create Git branch
+        console.log('🌿 Creating Git branch...');
+        alert('Git branch creation will be integrated');
+        break;
+      case 'create-pr':
+        // TODO: Create Pull Request
+        console.log('📝 Creating Pull Request...');
+        alert('Pull Request creation will be integrated');
+        break;
+    }
+  }
+
+  private parseAnalysisResult(result: string): any {
+    // Simple parser to extract key information from analysis result
+    // In a full implementation, this would parse the markdown more thoroughly
+    return {
+      summary: result.substring(0, 200),
+      fullText: result,
+      parsedAt: new Date().toISOString()
+    };
+  }
 }

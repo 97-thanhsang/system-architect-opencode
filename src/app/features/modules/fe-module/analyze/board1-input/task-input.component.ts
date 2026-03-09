@@ -85,6 +85,11 @@ import { PolymorpheusContent } from '@tinkoff/ng-polymorpheus';
                   placeholder="E:/SOURCE/your-project"
                 />
               </div>
+              <button (click)="browseProjectPath()" 
+                      class="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 hover:bg-blue-50 flex items-center justify-center transition-all"
+                      title="Browse folder">
+                <span class="material-icons-outlined text-slate-400 hover:text-google-blue text-lg">folder_open</span>
+              </button>
             </div>
 
             <!-- Output Path Row -->
@@ -110,6 +115,11 @@ import { PolymorpheusContent } from '@tinkoff/ng-polymorpheus';
                   placeholder="E:/SOURCE/your-project/reports"
                 />
               </div>
+              <button (click)="browseSavePath()" 
+                      class="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 hover:bg-blue-50 flex items-center justify-center transition-all"
+                      title="Browse folder">
+                <span class="material-icons-outlined text-slate-400 hover:text-google-blue text-lg">folder_open</span>
+              </button>
             </div>
           </div>
         </div>
@@ -295,8 +305,9 @@ export class TaskInputComponent {
   private readonly analyzeService = inject(AnalyzeService);
   private readonly dialogService = inject(TuiDialogService);
   
-  projectPath = signal('E:/SOURCE/ems.finance.fe');
-  savePath = signal('E:/SOURCE/ems.finance.fe/analyze-reports');
+  // Initialize from service state (auto-detected or from localStorage)
+  projectPath = signal(this.analyzeService.state().projectPath);
+  savePath = signal(this.analyzeService.state().savePath);
   
   activeTab = 0;
   rawText = signal('');
@@ -319,6 +330,29 @@ export class TaskInputComponent {
       this.savePath().trim().length > 0 &&
       this.inputs().length > 0
     );
+  }
+
+  // ============================================================
+  // FOLDER PICKER - Phase 1 Enhancement
+  // ============================================================
+  async browseProjectPath(): Promise<void> {
+    // TODO: Integrate with OpenCode file picker when available
+    // For now, prompt user to enter path manually
+    const path = prompt('Enter project path:', this.projectPath());
+    if (path) {
+      this.projectPath.set(path.trim());
+      // Auto-update save path
+      this.savePath.set(`${path.trim()}/analyze-reports`);
+      // Save to localStorage for auto-detect
+      localStorage.setItem('lastProjectPath', path.trim());
+    }
+  }
+
+  async browseSavePath(): Promise<void> {
+    const path = prompt('Enter reports save path:', this.savePath());
+    if (path) {
+      this.savePath.set(path.trim());
+    }
   }
 
   onFolderSelected(event: any, type: 'project' | 'save'): void {
@@ -382,6 +416,9 @@ export class TaskInputComponent {
 
   onExecute(): void {
     if (this.canSubmit()) {
+      // Save to localStorage for auto-detect on next session
+      localStorage.setItem('lastProjectPath', this.projectPath());
+      
       this.analyzeService.updatePaths(this.projectPath(), this.savePath());
       this.analyzeService.startAnalysis();
     }
