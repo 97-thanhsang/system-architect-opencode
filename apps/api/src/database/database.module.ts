@@ -11,7 +11,7 @@ import { Pipeline } from '../tasks/entities/pipeline.entity';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
-        type: 'sqlite',
+        type: 'better-sqlite3',
         database: configService.get<string>('DATABASE_NAME') || 'opencode.db',
         entities: [User, Task, Pipeline],
         synchronize: true, // Chỉ dùng cho development
